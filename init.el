@@ -59,13 +59,18 @@
 (global-unset-key (kbd "<menuq>"))
 
 
-(defun match-paren (arg)
-  "Go to the matching paren if on a paren; otherwise insert %."
-  (interactive "p")
-  (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
-        ((looking-at "\\s)") (forward-char 1) (backward-list 1))
-        (t (self-insert-command (or arg 1)))))
-(global-set-key "%" 'match-paren)
+;; (defun match-paren (arg)
+;;   "Go to the matching paren if on a paren; otherwise insert %."
+;;   (interactive "p")
+;;   (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+;;         ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+;;         (t (self-insert-command (or arg 1)))))
+;; (global-set-key "%" 'match-paren)
+
+(defun init ()
+  (interactive)
+  (find-file "~/.emacs.d/init.el"))
+
 
 ;; SCROLLING
 (setq mouse-wheel-scroll-amount '(2 ((shift) . 1))) ;; one line at a time
@@ -81,10 +86,10 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
-(linum-mode 1)
+(add-hook 'prog-mode-hook 'linum-mode)
+
 (column-number-mode 1)
 (line-number-mode 1)
-(setq column-number-mode t)
 
 (global-hl-line-mode 1)
 (show-paren-mode 1)
@@ -121,7 +126,6 @@
 
 (add-hook 'buffer-list-update-hook
           'sl/display-header)
-
 
 
 
@@ -194,10 +198,7 @@
   (setq whitespace-display-mappings
         '((space-mark 32 [46])
           (newline-mark 10 [182 10])
-          (tab-mark 9 [9655 9] [92 9])
-          ))
-  (setq whitespace-style '(face trailing lines-tail tab-mark))
-  (setq whitespace-line-column 80)
+          (tab-mark 9 [9655 9] [92 9])))
   (set-face-attribute 'whitespace-trailing
                       nil
                       :background "#ff8888"
@@ -206,7 +207,11 @@
                       nil
                       :background "gray20"
                       :foreground "#ff8888")
-  (global-whitespace-mode t))
+  (set-face-attribute 'whitespace-tab
+                      nil
+                      :foreground "#444444")
+  (setq whitespace-style '(face trailing lines-tail tabs tab-mark))
+  (setq whitespace-line-column 80))
 
 (global-set-key (kbd "<C-tab>") 'hippie-expand)
 (global-set-key (kbd "C-TAB") 'hippie-expand)
@@ -217,6 +222,7 @@
   :config
   (defun c-keybind-hook ()
     (electric-indent-mode -1)
+    (whitespace-mode t)
     (local-set-key (kbd "<M-up>") 'c-beginning-of-defun)
     (local-set-key (kbd "M-p") 'c-beginning-of-defun)
     (local-set-key (kbd "<M-down>")
@@ -262,21 +268,20 @@
 (add-to-list 'auto-mode-alist '("\\.cu\\'" . c++-mode))
 
 
+(autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+(add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+(add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+(add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+(add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+
 ;; SCHEME
-
-;;(autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-;;(add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-;;(add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-;;(add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-;;(add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-;;(add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-;;(add-hook 'scheme-mode-hook           #'enable-paredit-mode)
-
-
 (use-package scheme-mode
   :defer t
   :init
   (setq scheme-program-name '"csi")
+  (setq scheme-mit-dialect nil)
   :bind (:map scheme-mode-map
               ("<C-return>" . scheme-send-last-sexp)
               ("<C-enter>" . scheme-send-last-sexp))
@@ -330,7 +335,8 @@
   ;;            ("C-c C-s" . julia-shell-save-and-go))
   :bind (:map comint-mode-map
               ("C-l C-l" . comint-clear-buffer))
-  :mode ("\\.jl\\'" . julia-mode))
+  :mode ("\\.jl\\'" . julia-mode)
+  :config (whitespace-mode t))
 
 
 ;; Python-lang
@@ -360,6 +366,7 @@
                    (python-nav-forward-defun)
                    (recenter 10)))
   (setq-default py-split-windows-on-execute-function 'split-window-vertically)
+  (whitespace-mode t)
   )
 
 (add-hook 'python-mode-hook 'python-hook)
@@ -421,7 +428,8 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("4138944fbed88c047c9973f68908b36b4153646a045648a22083bd622d1e636d" default)))
+    ("47ec21abaa6642fefec1b7ace282221574c2dd7ef7715c099af5629926eb4fd7" "4138944fbed88c047c9973f68908b36b4153646a045648a22083bd622d1e636d" default)))
+ '(frame-brackground-mode (quote dark))
  '(package-selected-packages
    (quote
     (gruber-darker-theme ctags-update yasnippet-snippets julia-repl magit yasnippet use-package ujelly-theme paredit julia-mode geiser fish-mode auto-complete))))
