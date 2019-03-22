@@ -128,31 +128,25 @@
           'sl/display-header)
 
 
-
 ;; PACKAGING
 ;; Tell emacs where stuff is
 (add-to-list 'load-path "~/.emacs.d/lisp/")
 (add-to-list 'load-path "~/.emacs.d/packages/")
-
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 
 
-;; THEMES
-;;(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-;;(load-theme 'ujelly t)
-(load-theme 'gruber-darker t)
+(when (not (require 'use-package nil 'no-error))
+  (load-theme 'adwaita t)
+  (error "Cannot find use-package. Aborting init.el"))
 
+(if (equal (system-name) "quick") (load-theme 'dracula t))
 
-(if (not (featurep 'use-package))
-    ()
-    (message "use-package not installed"))
-
-(dolist (package '(use-package))
-   (unless (package-installed-p package)
-       (package-install package)))
+(condition-case nil
+    (load-theme 'gruber-darker t)
+  (error nil))
 
 ;; Global packages
 (use-package recentf
@@ -193,7 +187,13 @@
   (setq ac-auto-start nil))
 
 
+(use-package comint
+  :bind (:map comint-mode-map
+                   ("C-l C-l" . comint-clear-buffer)))
+
+
 (use-package whitespace
+  :ensure t
   :config
   (setq whitespace-display-mappings
         '((space-mark 32 [46])
@@ -257,14 +257,9 @@
   (global-set-key (kbd "C-c C-t") 'ctags-update)
   ;;(global-set-key (kbd "M-.") 'etags-select-find-tag)
   )
-
-
 ;(defun my-make-CR-do-indent ()
 ;  (define-key c-mode-base-map "\C-m" 'c-context-line-break'))
 ;(add-hook 'c-initialization-hook 'my-make-CR-do-indent)
-
-
-
 (add-to-list 'auto-mode-alist '("\\.cu\\'" . c++-mode))
 
 
@@ -278,7 +273,6 @@
 
 ;; SCHEME
 (use-package scheme-mode
-  :defer t
   :init
   (setq scheme-program-name '"csi")
   (setq scheme-mit-dialect nil)
@@ -287,10 +281,9 @@
               ("<C-enter>" . scheme-send-last-sexp))
   :mode ("\\.scm\\'" . scheme-mode))
 
-
 ;; R-lang
 (use-package ess-site
-  :defer t
+  :disabled
   :bind (:map ess-mode-map
               ("<C-return>" .
                ess-eval-region-or-function-or-paragraph))
@@ -317,31 +310,31 @@
 
 
 ;; Julia
-
 (use-package julia-mode
-  :defer t
+  :ensure t
+  :if (locate-file "julia" (getenv "PATH"))
+  :mode ("\\.jl\\'" . julia-mode)
   :init
-  (setenv "PATH" (concat (getenv "PATH") ":/home/viktor/.local/bin/"))
-  (setq exec-path (append exec-path '("~/.local/bin/")))
+  ;(setenv "PATH" (concat (getenv "PATH") ":/home/viktor/.local/bin/"))
+  ;(setq exec-path (append exec-path '("~/.local/bin/")))
   ;;(use-package julia-shell)
   (require 'julia-repl)
   (add-hook 'julia-mode-hook 'julia-repl-mode)
   ;;(setq julia-shell-animate-logo nil)
   ;;(setq julia-shell-buffer-name "Julia")
-  ;;:bind (:map julia-mode-map
-  ;;            ("C-c C-j" . run-julia)
-  ;;            ("<C-return>" . julia-shell-run-region-or-line)
-  ;;            ("<C-enter>" . julia-shell-run-region-or-line)
-  ;;            ("C-c C-s" . julia-shell-save-and-go))
   :bind (:map comint-mode-map
               ("C-l C-l" . comint-clear-buffer))
   :mode ("\\.jl\\'" . julia-mode)
-  :config (whitespace-mode t))
+  :config (whitespace-mode t)
+  :bind (:map julia-mode-map
+              ("C-c C-j" . run-julia)
+              ("<C-return>" . julia-shell-run-region-or-line)
+              ("<C-enter>" . julia-shell-run-region-or-line)
+              ("C-c C-s" . julia-shell-save-and-go)))
 
 
 ;; Python-lang
 (defun python-hook ()
-  (setq exec-path (append exec-path '("/home/exjobb_vikblom/.local/bin")))
   (setenv "PYTHONPATH" '"/home/viktor/projects/motion-mining/")
   (setenv "TF_CPP_MIN_LOG_LEVEL" "2")
   (setq python-shell-interpreter "ipython3")
@@ -365,9 +358,7 @@
                  (lambda () (interactive)
                    (python-nav-forward-defun)
                    (recenter 10)))
-  (setq-default py-split-windows-on-execute-function 'split-window-vertically)
-  (whitespace-mode t)
-  )
+  (setq-default py-split-windows-on-execute-function 'split-window-vertically))
 
 (add-hook 'python-mode-hook 'python-hook)
 
@@ -376,17 +367,17 @@
 ;; Matlab mode
 ;;(autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
 ;;(add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
-(use-package matlab
-  :defer t
-  :config
-  (matlab-cedet-setup)
-  (setq matlab-indent-function t)
-  (load-library "matlab-load")
-  (auto-complete-mode 1)
-  :bind (:map matlab-mode-map
-              ("<C-return>" . matlab-shell-run-region-or-line)
-              ("<C-enter>" . matlab-shell-run-region-or-line)
-              ("C-c C-m" . matlab-shell)))
+;; (use-package matlab
+;;   :defer t
+;;   :config
+;;   (matlab-cedet-setup)
+;;   (setq matlab-indent-function t)
+;;   (load-library "matlab-load")
+;;   (auto-complete-mode 1)
+;;   :bind (:map matlab-mode-map
+;;               ("<C-return>" . matlab-shell-run-region-or-line)
+;;               ("<C-enter>" . matlab-shell-run-region-or-line)
+;;               ("C-c C-m" . matlab-shell)))
 
 
 ;; LaTeX
@@ -432,7 +423,7 @@
  '(frame-brackground-mode (quote dark))
  '(package-selected-packages
    (quote
-    (gruber-darker-theme ctags-update yasnippet-snippets julia-repl magit yasnippet use-package ujelly-theme paredit julia-mode geiser fish-mode auto-complete))))
+    (julia-repl gruber-darker-theme ctags-update yasnippet-snippets magit yasnippet use-package ujelly-theme paredit geiser fish-mode auto-complete))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
