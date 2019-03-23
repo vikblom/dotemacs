@@ -4,9 +4,21 @@
 
 (prefer-coding-system 'utf-8)
 
+
+;; Builtints
+(require 'seq)
+
+
+
+;; Fonts
 (require 'iso-transl)
 (global-font-lock-mode t)
-(set-face-attribute 'default nil :font "Roboto Mono-10")
+
+(defun font-exists? (font) (find-font (font-spec :name font)))
+(set-frame-font
+ (seq-find 'font-exists? '("Roboto Mono-10"
+                           "Inconsolata-11"
+                           "DejaVu Sans Mono-10")))
 
 (setq font-lock-maximum-decoration t)
 
@@ -146,11 +158,27 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-;; Global packages
-(if (equal (system-name) "quick") (load-theme 'dracula t))
-(if (window-system)
-    (load-theme 'gruber-darker t))
+;; Theme setup
+(defun load-fresh-theme (theme)
+  "Disables all active themes and loads a new theme."
+  (interactive
+   (list (intern (completing-read "Load custom theme: "
+                                  (mapcar 'symbol-name
+                                          (custom-available-themes))))))
+  (mapcar 'disable-theme custom-enabled-themes)
+  (load-theme theme t))
 
+(defun find-theme (theme)
+  "Finds source .el of a theme by name. Nil if not on path."
+  (locate-file
+   (concat (symbol-name theme) "-theme.el")
+   (custom-theme--load-path)))
+
+(if (window-system)
+    (load-theme (seq-find 'find-theme '(dracula gruber-darker wombat)) t))
+
+
+;; Global packages
 (use-package recentf
   :ensure t
   :config
