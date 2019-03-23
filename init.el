@@ -7,6 +7,7 @@
 (require 'iso-transl)
 (global-font-lock-mode t)
 (set-face-attribute 'default nil :font "Roboto Mono-10")
+
 (setq font-lock-maximum-decoration t)
 
 ;; backup to folder by copying
@@ -147,7 +148,8 @@
 
 ;; Global packages
 (if (equal (system-name) "quick") (load-theme 'dracula t))
-(load-theme 'gruber-darker t)
+(if (window-system)
+    (load-theme 'gruber-darker t))
 
 (use-package recentf
   :ensure t
