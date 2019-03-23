@@ -4,16 +4,17 @@
 
 (prefer-coding-system 'utf-8)
 
-
 (require 'iso-transl)
 (global-font-lock-mode t)
-(set-face-attribute 'default nil :font "Inconsolata-11")
+(set-face-attribute 'default nil :font "Roboto Mono-10")
 (setq font-lock-maximum-decoration t)
 
-
 ;; backup to folder by copying
-(setq backup-directory-alist `(("." . "/home/viktor/.emacs.d/backups/")))
+(setq backup-directory-alist `(("." . "~/.emacs.d/backups/")))
 (setq backup-by-copying t)
+
+(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/"))
+(setq exec-path (append exec-path '("~/.local/bin/")))
 
 
 ;; REMOTE
@@ -24,21 +25,22 @@
 (delete-selection-mode t)
 (global-auto-revert-mode t)
 (setq auto-revert-remote-files t)
-
 (setq split-width-threshold 140)
+(setq require-final-newline t)
 
 ;; INDENTATION
 (setq-default indent-tabs-mode nil)
 (setq-default transient-mark-mode t)
 (setq-default tab-width 4)
-(setq c-default-style "linux"
-      c-basic-offset 4)
 
 ;; KEYBINDS
 (global-set-key [f6] 'toggle-truncate-lines)
 
+(global-set-key (kbd "C-s") 'isearch-forward-regexp)
+(global-set-key (kbd "C-r") 'isearch-backward-regexp)
+(global-set-key (kbd "C-M-s") 'isearch-forward)
+(global-set-key (kbd "C-M-r") 'isearch-backward)
 
-(global-unset-key (kbd "C-z"))
 (global-set-key (kbd "C-z") 'pop-to-mark-command)
 
 
@@ -58,6 +60,10 @@
 (global-unset-key (kbd "C-x C-SPC"))
 (global-unset-key (kbd "<menuq>"))
 
+(autoload 'zap-up-to-char "misc"
+  "Kill up to, but not including ARGth occurrence of CHAR." t)
+(global-set-key (kbd "M-z") 'zap-up-to-char)
+
 
 ;; (defun match-paren (arg)
 ;;   "Go to the matching paren if on a paren; otherwise insert %."
@@ -73,28 +79,26 @@
 
 
 ;; SCROLLING
-(setq mouse-wheel-scroll-amount '(2 ((shift) . 1))) ;; one line at a time
-(setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
-(setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-(setq scroll-step 1) ;; keyboard scroll one line at a time
-(setq scroll-margin 5)
+(setq mouse-wheel-scroll-amount '(2 ((shift) . 1))
+      mouse-wheel-progressive-speed nil
+      mouse-wheel-follow-mouse 't
+      scroll-step 1
+      scroll-margin 5)
 
 ;; APPEARANCE
-(add-to-list 'default-frame-alist '(height . 59))
-(add-to-list 'default-frame-alist '(width . 90))
-
+(setq frame-resize-pixelwise t)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (add-hook 'prog-mode-hook 'linum-mode)
-
 (column-number-mode 1)
 (line-number-mode 1)
-
 (global-hl-line-mode 1)
 (show-paren-mode 1)
 (setq show-paren-delay 0)
 
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'forward)
 
 (defmacro with-face (str &rest properties)
   `(propertize ,str 'face (list ,@properties)))
@@ -115,8 +119,7 @@
                                                 (length sl/drop-str))
                                              (length sl/header))))
           (concat sl/header))
-      (concat sl/header (file-name-nondirectory buffer-file-name))
-      )))
+      (concat sl/header (file-name-nondirectory buffer-file-name)))))
 
 (defun sl/display-header ()
   (setq header-line-format
@@ -137,18 +140,15 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 
-
-(when (not (require 'use-package nil 'no-error))
-  (load-theme 'adwaita t)
-  (error "Cannot find use-package. Aborting init.el"))
-
-(if (equal (system-name) "quick") (load-theme 'dracula t))
-
-(condition-case nil
-    (load-theme 'gruber-darker t)
-  (error nil))
+;; Bootstrap use-package
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 ;; Global packages
+(if (equal (system-name) "quick") (load-theme 'dracula t))
+(load-theme 'gruber-darker t)
+
 (use-package recentf
   :ensure t
   :config
@@ -160,8 +160,8 @@
 (use-package magit
   :ensure t
   :config
+  (setq vc-handled-backends nil)
   (global-set-key (kbd "C-x C-g") 'magit-status))
-(setq vc-handled-backends nil)
 
 
 (use-package yasnippet
@@ -187,9 +187,25 @@
   (setq ac-auto-start nil))
 
 
+(use-package paredit
+  :ensure t
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+  :bind (:map paredit-mode-map
+              ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
+              ("<M-up>" . beginning-of-defun)
+              ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
+              ("M-p" . beginning-of-defun)))
+
+
 (use-package comint
   :bind (:map comint-mode-map
-                   ("C-l C-l" . comint-clear-buffer)))
+              ("C-l C-l" . comint-clear-buffer)))
 
 
 (use-package whitespace
@@ -211,42 +227,31 @@
                       nil
                       :foreground "#444444")
   (setq whitespace-style '(face trailing lines-tail tabs tab-mark))
-  (setq whitespace-line-column 80))
+  (setq whitespace-line-column 80)
+  (add-hook 'prog-mode-hook 'whitespace-mode))
 
 (global-set-key (kbd "<C-tab>") 'hippie-expand)
 (global-set-key (kbd "C-TAB") 'hippie-expand)
 
 
-;; C Programming
+;; C-lang
 (use-package cc-mode
+  :bind (:map c-mode-map
+              ("<M-up>" . c-beginning-of-defun)
+              ("<M-down>" . (lambda () (interactive) (c-beginning-of-defun -1)))
+              ("M-p" . c-beginning-of-defun)
+              ("M-n" . (lambda () (interactive) (c-beginning-of-defun -1)))
+              ("C-c RET" . (lambda () (interactive) (compile "make -C ..")))
+              ("<f5>" . c-common-cleanup))
   :config
-  (defun c-keybind-hook ()
-    (electric-indent-mode -1)
-    (whitespace-mode t)
-    (local-set-key (kbd "<M-up>") 'c-beginning-of-defun)
-    (local-set-key (kbd "M-p") 'c-beginning-of-defun)
-    (local-set-key (kbd "<M-down>")
-                   (lambda () (interactive)
-                     (c-beginning-of-defun -1)))
-    (local-set-key (kbd "M-n")
-                   (lambda () (interactive)
-                     (c-beginning-of-defun -1)))
-    (local-set-key (kbd "C-c RET")
-                   (lambda () (interactive) (compile "make -C ..")))
-    (local-set-key (kbd "<f5>") 'c-common-cleanup)
-    )
-  (add-hook 'c-mode-common-hook 'c-keybind-hook)
-
-  (defun my-c-hook ()
-    (setq c-default-style "linux"
-          c-basic-offset 4)
-    (c-set-offset 'substatement-open 0)
-    (c-set-offset 'access-label -4)
-    (c-set-offset 'topmost-intro-cont 0)
-    (casi-mode 1)
-    (c-toggle-auto-newline 0)
-    (define-key c-mode-base-map (kbd "<f5>") 'compile))
-  (add-hook 'c-mode-hook 'my-c-hook)
+  (electric-indent-mode -1)
+  (setq c-default-style "linux"
+        c-basic-offset 4)
+  (c-set-offset 'substatement-open 0)
+  (c-set-offset 'access-label -4)
+  (c-set-offset 'topmost-intro-cont 0)
+  ;;(casi-mode 1)
+  (c-toggle-auto-newline 0)
 
   (require 'gud)
   ;;(define-key gud-mode-map (kbd "C-SPC") 'gud-break)
@@ -254,24 +259,10 @@
   (setq gdb-many-windows t)
 
   (require 'ctags-update)
-  (global-set-key (kbd "C-c C-t") 'ctags-update)
-  ;;(global-set-key (kbd "M-.") 'etags-select-find-tag)
-  )
-;(defun my-make-CR-do-indent ()
-;  (define-key c-mode-base-map "\C-m" 'c-context-line-break'))
-;(add-hook 'c-initialization-hook 'my-make-CR-do-indent)
-(add-to-list 'auto-mode-alist '("\\.cu\\'" . c++-mode))
+  (global-set-key (kbd "C-c C-t") 'ctags-update))
 
 
-(autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-(add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-(add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-(add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-(add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-(add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-(add-hook 'scheme-mode-hook           #'enable-paredit-mode)
-
-;; SCHEME
+;; Scheme-lang
 (use-package scheme-mode
   :init
   (setq scheme-program-name '"csi")
@@ -281,51 +272,17 @@
               ("<C-enter>" . scheme-send-last-sexp))
   :mode ("\\.scm\\'" . scheme-mode))
 
-;; R-lang
-(use-package ess-site
-  :disabled
-  :bind (:map ess-mode-map
-              ("<C-return>" .
-               ess-eval-region-or-function-or-paragraph))
-  :bind (:map ess-mode-map
-              ("<C-enter>" .
-               ess-eval-region-or-function-or-paragraph))
-  :bind (:map ess-mode-map
-              ("<C-S-return>" .
-               ess-eval-region-or-function-or-paragraph-and-step))
-  :bind (:map ess-mode-map
-              ("<C-S-enter>" .
-               ess-eval-region-or-function-or-paragraph-and-step))
-  :bind (:map ess-mode-map
-              ("C-c C-n" . ess-eval-line-and-step))
-  :config
-  (setq comint-scroll-to-buttom-on-output t)
-  (setq comint-scroll-to-buttom-on-input t)
-  (setq comint-move-point-for-output t)
-  (setq ess-history-directory "~/.R/")
-  (setq ess-history-file "~/.R/history")
-  (setq ess-eval-visibly nil)
-  ;;(ess-toggle-underscore t)
-  :mode ("\\.R\\'" . R-mode))
 
 
-;; Julia
+
+;; Julia-lang
 (use-package julia-mode
+  :if (locate-file "julia" exec-path)
   :ensure t
-  :if (locate-file "julia" (getenv "PATH"))
   :mode ("\\.jl\\'" . julia-mode)
   :init
-  ;(setenv "PATH" (concat (getenv "PATH") ":/home/viktor/.local/bin/"))
-  ;(setq exec-path (append exec-path '("~/.local/bin/")))
-  ;;(use-package julia-shell)
   (require 'julia-repl)
   (add-hook 'julia-mode-hook 'julia-repl-mode)
-  ;;(setq julia-shell-animate-logo nil)
-  ;;(setq julia-shell-buffer-name "Julia")
-  :bind (:map comint-mode-map
-              ("C-l C-l" . comint-clear-buffer))
-  :mode ("\\.jl\\'" . julia-mode)
-  :config (whitespace-mode t)
   :bind (:map julia-mode-map
               ("C-c C-j" . run-julia)
               ("<C-return>" . julia-shell-run-region-or-line)
@@ -363,6 +320,32 @@
 (add-hook 'python-mode-hook 'python-hook)
 
 
+;; R-lang
+(use-package ess-site
+  :disabled
+  :bind (:map ess-mode-map
+              ("<C-return>" .
+               ess-eval-region-or-function-or-paragraph))
+  :bind (:map ess-mode-map
+              ("<C-enter>" .
+               ess-eval-region-or-function-or-paragraph))
+  :bind (:map ess-mode-map
+              ("<C-S-return>" .
+               ess-eval-region-or-function-or-paragraph-and-step))
+  :bind (:map ess-mode-map
+              ("<C-S-enter>" .
+               ess-eval-region-or-function-or-paragraph-and-step))
+  :bind (:map ess-mode-map
+              ("C-c C-n" . ess-eval-line-and-step))
+  :config
+  (setq comint-scroll-to-buttom-on-output t
+        comint-scroll-to-buttom-on-input t
+        comint-move-point-for-output t
+        ess-history-directory "~/.R/"
+        ess-history-file "~/.R/history"
+        ess-eval-visibly nil)
+  ;;(ess-toggle-underscore t)
+  :mode ("\\.R\\'" . R-mode))
 
 ;; Matlab mode
 ;;(autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
