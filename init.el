@@ -1,13 +1,18 @@
-;; Startup
-(setq inhibit-startup-screen t)
-(setq inhibit-startup-message t)
+(setq inhibit-startup-screen t
+      inhibit-startup-message t)
 
 (prefer-coding-system 'utf-8)
 
+;; Set up package managing
+(package-initialize)
+(load "~/.emacs.d/pkg.el")
 
-;; Builtints
+
+;; Deps
 (require 'seq)
 
+(autoload 'zap-up-to-char "misc"
+  "Kill up to, but not including ARGth occurrence of CHAR." t)
 
 
 ;; Fonts
@@ -20,16 +25,6 @@
                            "Inconsolata-11"
                            "DejaVu Sans Mono-10")))
 
-
-(cond
- ((find-font (font-spec :name "Roboto Mono-10"))
-  (set-frame-font "Roboto Mono-10"))
- ((find-font (font-spec :name "Inconsolata-11"))
-  (set-frame-font "Inconsolata-11"))
- ((find-font (font-spec :name "DejaVu Sans Mono-10"))
-  (set-frame-font "DejaVu Sans Mono-10")))
-
-(set-face-attribute 'default nil :font "Roboto Mono-10")
 (setq font-lock-maximum-decoration t)
 
 ;; backup to folder by copying
@@ -44,48 +39,47 @@
 (put 'dired-find-alternate-file 'disabled nil)
 
 ;; BEHAVIOUR
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-(delete-selection-mode t)
-(global-auto-revert-mode t)
-(setq auto-revert-remote-files t)
-(setq split-width-threshold 140)
-(setq require-final-newline t)
+(progn
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+  (delete-selection-mode t)
+  (global-auto-revert-mode t)
+  (setq auto-revert-remote-files t)
+  (setq split-width-threshold 140)
+  (setq require-final-newline t))
 
 ;; INDENTATION
-(setq-default indent-tabs-mode nil)
-(setq-default transient-mark-mode t)
-(setq-default tab-width 4)
+(setq-default indent-tabs-mode nil
+              transient-mark-mode t
+              tab-width 4)
 
 ;; KEYBINDS
-(global-set-key [f6] 'toggle-truncate-lines)
+(progn (global-set-key [f6] 'toggle-truncate-lines)
 
-(global-set-key (kbd "C-s") 'isearch-forward-regexp)
-(global-set-key (kbd "C-r") 'isearch-backward-regexp)
-(global-set-key (kbd "C-M-s") 'isearch-forward)
-(global-set-key (kbd "C-M-r") 'isearch-backward)
+       (global-set-key (kbd "C-s") 'isearch-forward-regexp)
+       (global-set-key (kbd "C-r") 'isearch-backward-regexp)
+       (global-set-key (kbd "C-M-s") 'isearch-forward)
+       (global-set-key (kbd "C-M-r") 'isearch-backward)
 
-(global-set-key (kbd "C-z") 'pop-to-mark-command)
+       (global-set-key (kbd "C-z") 'pop-to-mark-command)
 
 
-(global-set-key (kbd "C-<next>") (lambda ()
-                                   (interactive)
-                                   (other-window 1)))
-(global-set-key (kbd "C-<prior>") (lambda ()
-                                    (interactive)
-                                    (other-window -1)))
-(global-set-key (kbd "C-å") 'previous-multiframe-window)
-(global-set-key (kbd "C-ä") 'next-multiframe-window)
-(global-set-key (kbd "M-å") 'previous-buffer)
-(global-set-key (kbd "M-ä") 'next-buffer)
+       (global-set-key (kbd "C-<next>") (lambda ()
+                                          (interactive)
+                                          (other-window 1)))
+       (global-set-key (kbd "C-<prior>") (lambda ()
+                                           (interactive)
+                                           (other-window -1)))
+       (global-set-key (kbd "C-å") 'previous-multiframe-window)
+       (global-set-key (kbd "C-ä") 'next-multiframe-window)
+       (global-set-key (kbd "M-å") 'previous-buffer)
+       (global-set-key (kbd "M-ä") 'next-buffer)
 
-(global-unset-key (kbd "C-<end>"))
-(global-unset-key (kbd "M-<home>"))
-(global-unset-key (kbd "C-x C-SPC"))
-(global-unset-key (kbd "<menuq>"))
+       (global-unset-key (kbd "C-<end>"))
+       (global-unset-key (kbd "M-<home>"))
+       (global-unset-key (kbd "C-x C-SPC"))
+       (global-unset-key (kbd "<menuq>"))
 
-(autoload 'zap-up-to-char "misc"
-  "Kill up to, but not including ARGth occurrence of CHAR." t)
-(global-set-key (kbd "M-z") 'zap-up-to-char)
+       (global-set-key (kbd "M-z") 'zap-up-to-char))
 
 
 ;; (defun match-paren (arg)
@@ -154,20 +148,6 @@
           'sl/display-header)
 
 
-;; PACKAGING
-;; Tell emacs where stuff is
-(add-to-list 'load-path "~/.emacs.d/lisp/")
-(add-to-list 'load-path "~/.emacs.d/packages/")
-
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(package-initialize)
-
-;; Bootstrap use-package
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
 ;; Theme setup
 (defun load-fresh-theme (theme)
   "Disables all active themes and loads a new theme."
@@ -183,9 +163,9 @@
   (locate-file
    (concat (symbol-name theme) "-theme.el")
    (custom-theme--load-path)))
+
 (load-theme (seq-find 'find-theme '(gruber-darker wombat)) t)
 
-(mapcar 'print '("foo" "bar"))
 
 ;; Global packages
 (use-package recentf
@@ -193,27 +173,23 @@
   :config
   (recentf-mode 1)
   (setq recentf-max-menu-items 25)
-  (global-set-key (kbd "C-x C-r") 'recentf-open-files))
+  :bind ("C-x C-r" . recentf-open-files))
 
 
 (use-package magit
   :ensure t
   :config
-  (setq vc-handled-backends nil)
-  (global-set-key (kbd "C-x C-g") 'magit-status))
+  (setq vc-handled-backends nil))
 
 
 (use-package yasnippet
   :ensure t
   :config
   (yas-global-mode 1)
-  ;; Remove Yasnippet's default tab key binding
-  (define-key yas-minor-mode-map (kbd "<tab>") nil)
-  (define-key yas-minor-mode-map (kbd "TAB") nil)
-  ;; Alternatively use Control-c + tab
-  ;;(define-key yas-minor-mode-map (kbd "\C-c TAB") 'yas-expand)
-  ;; Set Yasnippet's key binding to shift+tab
-  (define-key yas-minor-mode-map (kbd "<backtab>") 'yas-expand))
+  :bind (:map yas-minor-mode-map
+              ("<tab>" . nil)
+              ("TAB" . nil)
+              ("<backtab>" . yas-expand)))
 
 
 (use-package auto-complete
@@ -229,12 +205,13 @@
 (use-package paredit
   :ensure t
   :config
-  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
-  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-  (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+  :hook ((emacs-lisp-mode
+          eval-expression-minibuffer-setup
+          ielm-mode
+          lisp-mode
+          lisp-interaction-mode
+          scheme-mode)
+         . paredit-mode)
   :bind (:map paredit-mode-map
               ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ("<M-up>" . beginning-of-defun)
@@ -244,7 +221,12 @@
 
 (use-package comint
   :bind (:map comint-mode-map
-              ("C-l C-l" . comint-clear-buffer)))
+              ("C-l C-l" . comint-clear-buffer))
+  :config
+  (setq
+   comint-scroll-to-bottom-on-output t
+   comint-scroll-to-bottom-on-input t
+   comint-move-point-for-output t))
 
 
 (use-package whitespace
@@ -264,10 +246,11 @@
                       :foreground "#ff8888")
   (set-face-attribute 'whitespace-tab
                       nil
-                      :foreground "#444444")
+                      :foreground "#999999")
   (setq whitespace-style '(face trailing lines-tail tabs tab-mark))
   (setq whitespace-line-column 80)
   (add-hook 'prog-mode-hook 'whitespace-mode))
+
 
 (global-set-key (kbd "<C-tab>") 'hippie-expand)
 (global-set-key (kbd "C-TAB") 'hippie-expand)
@@ -280,8 +263,7 @@
               ("<M-down>" . (lambda () (interactive) (c-beginning-of-defun -1)))
               ("M-p" . c-beginning-of-defun)
               ("M-n" . (lambda () (interactive) (c-beginning-of-defun -1)))
-              ("C-c RET" . (lambda () (interactive) (compile "make -C ..")))
-              ("<f5>" . c-common-cleanup))
+              ("C-c RET" . (lambda () (interactive) (compile "make -C .."))))
   :config
   (electric-indent-mode -1)
   (setq c-default-style "linux"
@@ -289,20 +271,27 @@
   (c-set-offset 'substatement-open 0)
   (c-set-offset 'access-label -4)
   (c-set-offset 'topmost-intro-cont 0)
-  ;;(casi-mode 1)
   (c-toggle-auto-newline 0)
 
   (require 'gud)
   ;;(define-key gud-mode-map (kbd "C-SPC") 'gud-break)
   (setq gdb-show-main t)
-  (setq gdb-many-windows t)
+  (setq gdb-many-windows t))
 
-  (require 'ctags-update)
-  (global-set-key (kbd "C-c C-t") 'ctags-update))
+(use-package ctags-update
+  :onlyif (locate-file "ctags" exec-path)
+  :defer t
+  :bind (:map c-mode-map ("<f5>" . ctags-update)))
 
+(use-package clang-format
+  :onlyif (locate-file "clang-format" exec-path)
+  :config
+  (setq clang-format-style "{BasedOnStyle: WebKit, PointerAlignment: Right}")
+  :bind ("C-c f" . clang-format-buffer))
 
 ;; Scheme-lang
 (use-package scheme-mode
+  :onlyif (locate-file "chicken" exec-path)
   :init
   (setq scheme-program-name '"csi")
   (setq scheme-mit-dialect nil)
@@ -312,11 +301,9 @@
   :mode ("\\.scm\\'" . scheme-mode))
 
 
-
-
 ;; Julia-lang
 (use-package julia-mode
-  :if (locate-file "julia" exec-path)
+  :onlyif (locate-file "julia" exec-path)
   :ensure t
   :mode ("\\.jl\\'" . julia-mode)
   :init
@@ -445,7 +432,7 @@
  '(frame-brackground-mode (quote dark))
  '(package-selected-packages
    (quote
-    (julia-repl gruber-darker-theme ctags-update yasnippet-snippets magit yasnippet use-package ujelly-theme paredit geiser fish-mode auto-complete))))
+    (clang-format julia-repl gruber-darker-theme ctags-update yasnippet-snippets magit yasnippet use-package ujelly-theme paredit geiser fish-mode auto-complete))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
