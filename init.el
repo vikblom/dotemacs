@@ -164,8 +164,8 @@
    (concat (symbol-name theme) "-theme.el")
    (custom-theme--load-path)))
 
-(load-theme (seq-find 'find-theme '(gruber-darker wombat)) t)
-
+(if (window-system)
+    (load-theme (seq-find 'find-theme '(dracula gruber-darker wombat)) t))
 
 ;; Global packages
 (use-package recentf
