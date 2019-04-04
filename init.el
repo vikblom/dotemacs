@@ -74,6 +74,9 @@
        (global-set-key (kbd "M-å") 'previous-buffer)
        (global-set-key (kbd "M-ä") 'next-buffer)
 
+       (global-set-key (kbd "<C-tab>") 'hippie-expand)
+       (global-set-key (kbd "C-TAB") 'hippie-expand)
+
        (global-unset-key (kbd "C-<end>"))
        (global-unset-key (kbd "M-<home>"))
        (global-unset-key (kbd "C-x C-SPC"))
@@ -165,7 +168,7 @@
    (custom-theme--load-path)))
 
 (if (window-system)
-    (load-theme (seq-find 'find-theme '(dracula gruber-darker wombat)) t))
+    (load-theme (seq-find 'find-theme '(dracula noctilux gruber-darker wombat)) t))
 
 ;; Global packages
 (use-package recentf
@@ -252,10 +255,6 @@
   (add-hook 'prog-mode-hook 'whitespace-mode))
 
 
-(global-set-key (kbd "<C-tab>") 'hippie-expand)
-(global-set-key (kbd "C-TAB") 'hippie-expand)
-
-
 ;; C-lang
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -288,6 +287,7 @@
   :config
   (setq clang-format-style "{BasedOnStyle: WebKit, PointerAlignment: Right}")
   :bind ("C-c f" . clang-format-buffer))
+
 
 ;; Scheme-lang
 (use-package scheme-mode
@@ -415,27 +415,3 @@
 ;;     (local-set-key (kbd "<C-S-enter>") 'TeX-command-run-all)
 ;;     (add-hook 'LaTeX-mode-hook 'my-LaTeX-mode)
 ;;     ))
-
-
-
-;;Haskell setup
-;;(add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
-;;(add-hook 'haskell-mode-hook 'interactive-haskell-mode)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("47ec21abaa6642fefec1b7ace282221574c2dd7ef7715c099af5629926eb4fd7" "4138944fbed88c047c9973f68908b36b4153646a045648a22083bd622d1e636d" default)))
- '(frame-brackground-mode (quote dark))
- '(package-selected-packages
-   (quote
-    (clang-format julia-repl gruber-darker-theme ctags-update yasnippet-snippets magit yasnippet use-package ujelly-theme paredit geiser fish-mode auto-complete))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
