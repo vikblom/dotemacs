@@ -169,24 +169,17 @@
    (concat (symbol-name theme) "-theme.el")
    (custom-theme--load-path)))
 
-(cond ((daemonp)
-       (add-hook 'after-make-frame-functions
-                 (lambda (frame)
-                   (select-frame frame)
-                   (load-theme (seq-find 'find-theme '(dracula
-                                                       noctilux
-                                                       gruber-darker
-                                                       wombat)) t))))
-      ((window-system)
-       (load-theme (seq-find 'find-theme '(dracula
-                                           noctilux
-                                           gruber-darker
-                                           wombat)) t)))
-
-
-(if (window-system)
-    (load-theme (seq-find 'find-theme '(dracula noctilux gruber-darker wombat)) t))
-
+(let ((theme (seq-find 'find-theme '(dracula
+                                     dnoctilux
+                                     dgruber-darker
+                                     dwombat))))
+  (cond ((not theme)) ;; Do nothing
+        ((daemonp)
+         (add-hook 'after-make-frame-functions
+                   (lambda (frame)
+                     (select-frame frame)
+                     (load-theme theme t))))
+        ((window-system) (load-theme theme t))))
 
 ;; Global packages
 (use-package recentf
