@@ -170,15 +170,14 @@
    (custom-theme--load-path)))
 
 (let ((theme (seq-find 'find-theme '(dracula
-                                     dnoctilux
-                                     dgruber-darker
-                                     dwombat))))
+                                     wombat
+                                     noctilux
+                                     gruber-darker))))
   (cond ((not theme)) ;; Do nothing
-        ((daemonp)
-         (add-hook 'after-make-frame-functions
-                   (lambda (frame)
-                     (select-frame frame)
-                     (load-theme theme t))))
+        ((daemonp) (add-hook 'after-make-frame-functions
+                             (lambda (frame)
+                               (select-frame frame)
+                               (load-theme theme t))))
         ((window-system) (load-theme theme t))))
 
 ;; Global packages

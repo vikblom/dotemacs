@@ -9,10 +9,9 @@
             ("ftp"      . "A276720@cloudpxgot1.srv.volvo.com:8080")
             ("no_proxy" . "^.*example.com"))))
 
-(package-refresh-contents)
-
 ;; Bootstrap use-package
 (unless (package-installed-p 'use-package)
+  (package-refresh-contents)
   (package-install 'use-package))
 
 (require 'use-package)
