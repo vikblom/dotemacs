@@ -187,6 +187,7 @@
 (if (window-system)
     (load-theme (seq-find 'find-theme '(dracula noctilux gruber-darker wombat)) t))
 
+
 ;; Global packages
 (use-package recentf
   :ensure t
