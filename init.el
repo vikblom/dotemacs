@@ -169,18 +169,29 @@
    (concat (symbol-name theme) "-theme.el")
    (custom-theme--load-path)))
 
-(let ((theme (seq-find 'find-theme '(dracula
-                                     wombat
-                                     noctilux
-                                     gruber-darker))))
-  (cond ((not theme)) ;; Do nothing
-        ((daemonp) (add-hook 'after-make-frame-functions
-                             (lambda (frame)
-                               (select-frame frame)
-                               (load-theme theme t))))
-        ((window-system) (load-theme theme t))))
+(defun pref-theme ()
+  (seq-find 'find-theme '(dracula
+                          noctilux
+                          wombat
+                          gruber-darker)))
+
+(cond ((not (pref-theme))) ;; Do nothing
+      ((daemonp) (add-hook 'after-make-frame-functions
+                           (lambda (frame)
+                             (select-frame frame)
+                             (load-theme (pref-theme) t))))
+      ((window-system) (load-theme (pref-theme) t)))
 
 ;; Global packages
+(use-package org
+  :config
+  (define-key global-map "\C-c l" 'org-store-link)
+  (define-key global-map "\C-c a" 'org-agenda)
+  (setq org-agenda-files (list "~/org")
+        org-cycle-separator-lines 1
+        org-startup-folded nil
+        org-log-done nil))
+
 (use-package recentf
   :ensure t
   :config
