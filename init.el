@@ -1,5 +1,5 @@
-(setq inhibit-startup-screen t
-      inhibit-startup-message t)
+;; (setq inhibit-startup-screen t
+;;       inhibit-startup-message t)
 
 (prefer-coding-system 'utf-8)
 
@@ -169,10 +169,8 @@
    (concat (symbol-name theme) "-theme.el")
    (custom-theme--load-path)))
 
-(let ((theme (seq-find 'find-theme '(dracula
-                                     wombat
-                                     noctilux
-                                     gruber-darker))))
+(let ((theme (seq-find 'find-theme
+                       '(dracula wombat noctilux gruber-darker))))
   (cond ((not theme)) ;; Do nothing
         ((daemonp) (add-hook 'after-make-frame-functions
                              (lambda (frame)
@@ -300,20 +298,24 @@
 
 
 ;; Scheme-lang
-(use-package scheme-mode
-  :onlyif (locate-file "chicken" exec-path)
-  :init
-  (setq scheme-program-name '"csi")
-  (setq scheme-mit-dialect nil)
-  :bind (:map scheme-mode-map
-              ("<C-return>" . scheme-send-last-sexp)
-              ("<C-enter>" . scheme-send-last-sexp))
-  :mode ("\\.scm\\'" . scheme-mode))
+(use-package geiser
+  :onlyif (executable-find "chicken")
+  :config
+  (setq geiser-active-implementations '(chicken)))
+;; (use-package scheme-mode
+;;   :onlyif (locate-file "chicken" exec-path)
+;;   :init
+;;   (setq scheme-program-name '"csi")
+;;   (setq scheme-mit-dialect nil)
+;;   :bind (:map scheme-mode-map
+;;               ("<C-return>" . scheme-send-last-sexp)
+;;               ("<C-enter>" . scheme-send-last-sexp))
+;;   :mode ("\\.scm\\'" . scheme-mode))
 
 
 ;; Julia-lang
 (use-package julia-mode
-  :onlyif (locate-file "julia" exec-path)
+  :onlyif (executable-find "julia")
   :ensure t
   :mode ("\\.jl\\'" . julia-mode)
   :init
