@@ -1,4 +1,5 @@
 ;;; -*- lexical-binding: t; -*-
+
 ;; Set up package managing
 (package-initialize)
 (load "~/.emacs.d/pkg.el")
@@ -177,6 +178,7 @@
   :ensure t
   :config
   (yas-global-mode 1)
+  (use-package yasnippet-snippets)
   :bind (:map yas-minor-mode-map
               ("<tab>" . nil)
               ("TAB" . nil)
@@ -285,9 +287,9 @@
   (setq geiser-active-implementations '(chicken)))
 
 
-(use-package ac-geiser
-  :onlyif (executable-find "chicken")
-  :hook geiser-mode)
+;; (use-package ac-geiser
+;;   :onlyif (executable-find "chicken")
+;;   :hook geiser-mode)
 
 
 ;; Julia-lang
