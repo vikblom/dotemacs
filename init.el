@@ -9,8 +9,9 @@
 ;; Deps
 (require 'seq)
 
-(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/"))
-(setq exec-path (append exec-path '("~/.local/bin/")))
+(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/:~/local/bin/"))
+(setq exec-path (append exec-path '("~/.local/bin/" "~/local/bin/")))
+(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
 
 (defun init ()
   (interactive)
@@ -298,13 +299,13 @@
   :ensure t
   :mode ("\\.jl\\'" . julia-mode)
   :init
-  (require 'julia-repl)
+  (use-package julia-repl)
   (add-hook 'julia-mode-hook 'julia-repl-mode)
-  :bind (:map julia-mode-map
-              ("C-c C-j" . run-julia)
-              ("<C-return>" . julia-shell-run-region-or-line)
-              ("<C-enter>" . julia-shell-run-region-or-line)
-              ("C-c C-s" . julia-shell-save-and-go)))
+   :bind (:map julia-mode-map
+               ("C-c C-j" . run-julia)
+               ("<C-return>" . julia-shell-run-region-or-line)
+               ("<C-enter>" . julia-shell-run-region-or-line)
+               ("C-c C-s" . julia-shell-save-and-go)))
 
 
 ;; Python-lang
