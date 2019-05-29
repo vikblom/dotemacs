@@ -1,4 +1,5 @@
 ;;; -*- lexical-binding: t; -*-
+
 ;; Set up package managing
 (package-initialize)
 (load "~/.emacs.d/pkg.el")
@@ -8,8 +9,9 @@
 ;; Deps
 (require 'seq)
 
-(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/"))
-(setq exec-path (append exec-path '("~/.local/bin/")))
+(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/:~/local/bin/"))
+(setq exec-path (append exec-path '("~/.local/bin/" "~/local/bin/")))
+(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
 
 (defun init ()
   (interactive)
@@ -183,6 +185,7 @@
   :ensure t
   :config
   (yas-global-mode 1)
+  (use-package yasnippet-snippets)
   :bind (:map yas-minor-mode-map
               ("<tab>" . nil)
               ("TAB" . nil)
@@ -291,9 +294,9 @@
   (setq geiser-active-implementations '(chicken)))
 
 
-(use-package ac-geiser
-  :onlyif (executable-find "chicken")
-  :hook geiser-mode)
+;; (use-package ac-geiser
+;;   :onlyif (executable-find "chicken")
+;;   :hook geiser-mode)
 
 
 ;; Julia-lang
@@ -302,13 +305,13 @@
   :ensure t
   :mode ("\\.jl\\'" . julia-mode)
   :init
-  (require 'julia-repl)
+  (use-package julia-repl)
   (add-hook 'julia-mode-hook 'julia-repl-mode)
-  :bind (:map julia-mode-map
-              ("C-c C-j" . run-julia)
-              ("<C-return>" . julia-shell-run-region-or-line)
-              ("<C-enter>" . julia-shell-run-region-or-line)
-              ("C-c C-s" . julia-shell-save-and-go)))
+   :bind (:map julia-mode-map
+               ("C-c C-j" . run-julia)
+               ("<C-return>" . julia-shell-run-region-or-line)
+               ("<C-enter>" . julia-shell-run-region-or-line)
+               ("C-c C-s" . julia-shell-save-and-go)))
 
 
 ;; Python-lang
