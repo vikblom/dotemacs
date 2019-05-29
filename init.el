@@ -15,6 +15,10 @@
   (interactive)
   (find-file "~/.emacs.d/init.el"))
 
+(defun today ()
+  (interactive)
+  (insert (format-time-string "%Y-%m-%d")))
+
 (autoload 'zap-up-to-char "misc"
   "Kill up to, but not including ARGth occurrence of CHAR." t)
 
@@ -25,8 +29,8 @@
 
 (defun font-exist-p (font) (find-font (font-spec :name font)))
 (set-frame-font
- (seq-find 'font-exist-p '("Roboto Mono-10"
-                           "Inconsolata-11"
+ (seq-find 'font-exist-p '("Inconsolata-11"
+                           "Roboto Mono-10"
                            "DejaVu Sans Mono-10")))
 
 (setq font-lock-maximum-decoration t)
@@ -44,7 +48,8 @@
        (global-auto-revert-mode t)
        (setq auto-revert-remote-files t)
        (setq split-width-threshold 140)
-       (setq require-final-newline t))
+       (setq require-final-newline t)
+       (setq bookmark-save-flag 1))
 
 ;; INDENTATION
 (setq-default indent-tabs-mode nil
@@ -81,7 +86,8 @@
        (global-unset-key (kbd "C-x C-SPC"))
        (global-unset-key (kbd "<menuq>"))
 
-       (global-set-key (kbd "M-z") 'zap-up-to-char))
+       (global-set-key (kbd "M-z") 'zap-up-to-char)
+       (global-set-key (kbd "C-x C-b") 'ibuffer))
 
 
 ;; SCROLLING
@@ -307,7 +313,6 @@
 
 ;; Python-lang
 (defun python-hook ()
-  (setenv "PYTHONPATH" '"/home/viktor/projects/motion-mining/")
   (setenv "TF_CPP_MIN_LOG_LEVEL" "2")
   (setq python-shell-interpreter "ipython3")
   (setq python-indent 4)
@@ -354,17 +359,16 @@
 ;; Matlab mode
 ;;(autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
 ;;(add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
-;; (use-package matlab
-;;   :defer t
-;;   :config
-;;   (matlab-cedet-setup)
-;;   (setq matlab-indent-function t)
-;;   (load-library "matlab-load")
-;;   (auto-complete-mode 1)
-;;   :bind (:map matlab-mode-map
-;;               ("<C-return>" . matlab-shell-run-region-or-line)
-;;               ("<C-enter>" . matlab-shell-run-region-or-line)
-;;               ("C-c C-m" . matlab-shell)))
+(use-package matlab
+  :defer t
+  :config
+  ;(matlab-cedet-setup)
+  (setq matlab-indent-function t)
+  (auto-complete-mode 1)
+  :bind (:map matlab-mode-map
+              ("<C-return>" . matlab-shell-run-region-or-line)
+              ("<C-enter>" . matlab-shell-run-region-or-line)
+              ("C-c C-m" . matlab-shell)))
 
 
 ;; LaTeX
