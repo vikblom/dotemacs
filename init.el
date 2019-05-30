@@ -297,15 +297,17 @@
 (use-package julia-mode
   :onlyif (executable-find "julia")
   :ensure t
-  :mode ("\\.jl\\'" . julia-mode)
-  :init
-  (use-package julia-repl)
+  :mode ("\\.jl\\'" . julia-mode))
+
+(use-package julia-repl
+  :onlyif (executable-find "julia")
+  :config
   (add-hook 'julia-mode-hook 'julia-repl-mode)
-   :bind (:map julia-mode-map
-               ("C-c C-j" . run-julia)
-               ("<C-return>" . julia-shell-run-region-or-line)
-               ("<C-enter>" . julia-shell-run-region-or-line)
-               ("C-c C-s" . julia-shell-save-and-go)))
+  :bind (:map julia-mode-map
+              ("C-c C-j" . julia-repl)
+              ("<C-return>" . julia-repl-send-region-or-line)
+              ("<C-enter>" . julia-repl-send-region-or-line)))
+
 
 
 ;; Python-lang
