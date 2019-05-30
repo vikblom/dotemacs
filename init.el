@@ -354,6 +354,9 @@
               ("C-c C-n" . ess-eval-line-and-step))
   :mode ("\\.R\\'" . R-mode))
 
+(setq snake-initial-x 3
+      snake-width 15)
+
 ;; Matlab mode
 ;;(autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
 ;;(add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
