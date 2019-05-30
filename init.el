@@ -47,6 +47,7 @@
 ;; BEHAVIOUR
 (progn (add-hook 'before-save-hook 'delete-trailing-whitespace)
        (delete-selection-mode t)
+       (setq x-select-enable-clipboard t)
        (global-auto-revert-mode t)
        (setq auto-revert-remote-files t)
        (setq split-width-threshold 140)
@@ -253,6 +254,25 @@
   (add-hook 'prog-mode-hook 'whitespace-mode))
 
 
+;; HELM
+;; https://tuhdo.github.io/helm-intro.html
+(use-package helm
+  :bind (("M-x" . helm-M-x)
+         ("C-x b" . helm-mini)
+         ("M-y" . helm-show-kill-ring)
+         ("C-x C-f" . helm-find-files)
+         ("C-x f" . helm-find)
+         ("C-c C-j" . helm-semantic-or-imenu))
+  :config
+  (helm-mode 1)
+  (setq helm-M-x-fuzzy-match t
+        helm-semantic-fuzzy-match t
+        helm-imenu-fuzzy-match t))
+
+(use-package helm-ls-git
+  :bind ("C-c C-p" . helm-browse-project))
+
+
 ;; C-lang
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -302,7 +322,8 @@
 ;; Julia-lang
 (use-package julia-mode
   :onlyif (executable-find "julia")
-  :ensure t
+  :config
+  (setq auto-mode-alist (delq (assoc "\\.jl\\'" auto-mode-alist) auto-mode-alist))
   :mode ("\\.jl\\'" . julia-mode))
 
 (use-package julia-repl
@@ -346,20 +367,20 @@
 
 
 ;; R-lang
-(use-package ess-site
-  :disabled
-  :config
-  (setq comint-scroll-to-buttom-on-output t
-        comint-scroll-to-buttom-on-input t
-        comint-move-point-for-output t
-        ess-history-directory "~/.R/"
-        ess-history-file "~/.R/history"
-        ess-eval-visibly nil)
-  :bind (:map ess-mode-map
-              ("<C-return>" . ess-eval-region-or-function-or-paragraph)
-              ("<C-enter>" . ess-eval-region-or-function-or-paragraph)
-              ("C-c C-n" . ess-eval-line-and-step))
-  :mode ("\\.R\\'" . R-mode))
+;; (use-package ess-site
+;;   :disabled
+;;   :config
+;;   (setq comint-scroll-to-buttom-on-output t
+;;         comint-scroll-to-buttom-on-input t
+;;         comint-move-point-for-output t
+;;         ess-history-directory "~/.R/"
+;;         ess-history-file "~/.R/history"
+;;         ess-eval-visibly nil)
+;;   :bind (:map ess-mode-map
+;;               ("<C-return>" . ess-eval-region-or-function-or-paragraph)
+;;               ("<C-enter>" . ess-eval-region-or-function-or-paragraph)
+;;               ("C-c C-n" . ess-eval-line-and-step))
+;;   :mode ("\\.R\\'" . R-mode))
 
 (setq snake-initial-x 3
       snake-width 15)
