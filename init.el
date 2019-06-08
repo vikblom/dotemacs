@@ -282,7 +282,8 @@
               ("C-j" . helm-confirm-and-exit-minibuffer))
   :config
   (helm-mode 1)
-  (setq helm-M-x-fuzzy-match t
+  (setq helm-split-window-default-side 'below
+        helm-M-x-fuzzy-match t
         helm-semantic-fuzzy-match t
         helm-imenu-fuzzy-match t))
 
