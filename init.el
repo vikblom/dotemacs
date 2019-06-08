@@ -279,7 +279,7 @@
          ("C-x f" . helm-find)
          ("C-c C-j" . helm-semantic-or-imenu))
   :bind (:map helm-map
-              ("C-j" . helm-confirm-and-exit-minibuffer))
+              ("C-j" . helm-ff-RET))
   :config
   (helm-mode 1)
   (setq helm-split-window-default-side 'below
