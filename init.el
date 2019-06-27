@@ -51,7 +51,6 @@ end up leaving point on a space or newline character."
 
 (defun font-exist-p (font) (find-font (font-spec :name font)))
 
-
 (defun pref-font ()
   (seq-find 'font-exist-p '("Roboto Mono-10"
                             "Inconsolata-11"
@@ -90,6 +89,7 @@ end up leaving point on a space or newline character."
 
 ;; KEYBINDS
 (progn (global-set-key [f6] 'toggle-truncate-lines)
+       (global-set-key (kbd "C-c C-q") 'comment-or-uncomment-region)
 
        (global-set-key (kbd "C-s") 'isearch-forward-regexp)
        (global-set-key (kbd "C-r") 'isearch-backward-regexp)
@@ -254,7 +254,9 @@ end up leaving point on a space or newline character."
 
 (use-package comint
   :bind (:map comint-mode-map
-              ("C-l C-l" . comint-clear-buffer))
+              ("C-l C-l" . comint-clear-buffer)
+              ("C-p" . comint-previous-input)
+              ("C-n" . comint-next-input))
   :config
   (setq comint-scroll-to-bottom-on-output t
         comint-scroll-to-bottom-on-input t
@@ -284,18 +286,33 @@ end up leaving point on a space or newline character."
   (add-hook 'prog-mode-hook 'whitespace-mode))
 
 
+(use-package windmove
+  :ensure t
+  :config
+  (windmove-default-keybindings 'super)
+  (setq windmove-wrap-around t)
+  :bind (("s-h" . windmove-left)
+         ("s-j" . windmove-down)
+         ("s-k" . windmove-up)
+         ("s-l" . windmove-right)))
+
+
 ;; HELM
 ;; https://tuhdo.github.io/helm-intro.html
 (use-package helm
-  :bind (("M-x" . helm-M-x)
+  :bind (:map global-map
+         ("M-x" . helm-M-x)
          ("C-x b" . helm-mini)
          ("M-y" . helm-show-kill-ring)
          ("C-x C-f" . helm-find-files)
          ("C-x f" . helm-find)
          ("C-c C-j" . helm-semantic-or-imenu))
+  :bind (:map helm-map
+              ("C-j" . helm-ff-RET))
   :config
   (helm-mode 1)
-  (setq helm-M-x-fuzzy-match t
+  (setq helm-split-window-default-side 'below
+        helm-M-x-fuzzy-match t
         helm-semantic-fuzzy-match t
         helm-imenu-fuzzy-match t))
 
@@ -342,7 +359,8 @@ end up leaving point on a space or newline character."
 (use-package geiser
   :onlyif (executable-find "chicken")
   :config
-  (setq geiser-active-implementations '(chicken)))
+  (setq geiser-active-implementations '(chicken)
+        geiser-chicken-compile-geiser-p nil))
 
 
 ;; (use-package ac-geiser
@@ -370,9 +388,8 @@ end up leaving point on a space or newline character."
 
 ;; Python-lang
 (defun python-hook ()
-  (setenv "TF_CPP_MIN_LOG_LEVEL" "2")
-  (setq python-shell-interpreter "ipython3")
-  (setq python-indent 4)
+  (setq python-shell-interpreter "ipython3"
+        python-indent 4)
   (setq python-shell-interpreter-args
         "-c \"%load_ext autoreload\" --simple-prompt -i")
   (defun refresh ()
