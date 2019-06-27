@@ -24,16 +24,45 @@
 (autoload 'zap-up-to-char "misc"
   "Kill up to, but not including ARGth occurrence of CHAR." t)
 
+(defun double-indent ()
+  (interactive)
+  (replace-regexp "^\\( +\\)" "\\1\\1" nil (mark) (point)))
+
+(defun next-line-non-empty-column (arg)
+  "Find next line, on the same column, skipping those that would
+end up leaving point on a space or newline character."
+  (interactive "p")
+  (let* ((hpos (- (point) (point-at-bol)))
+         (re (format "^.\\{%s\\}[^\n ]" hpos)))
+    (cond ((> arg 0)
+           (forward-char 1) ; don't match current position (can only happen at column 0)
+           (re-search-forward re))
+          ((< arg 0)
+           (forward-char -1)           ; don't match current position.
+           (re-search-backward re)
+           (goto-char (match-end 0))))
+    ;; now point is after the match, let's go back one column.
+    (forward-char -1)))
+
 ;; Fonts
 (require 'iso-transl)
 (prefer-coding-system 'utf-8)
 (global-font-lock-mode t)
 
 (defun font-exist-p (font) (find-font (font-spec :name font)))
-(set-frame-font
- (seq-find 'font-exist-p '("Inconsolata-11"
-                           "Roboto Mono-10"
-                           "DejaVu Sans Mono-10")))
+
+
+(defun pref-font ()
+  (seq-find 'font-exist-p '("Roboto Mono-10"
+                            "Inconsolata-11"
+                            "DejaVu Sans Mono-10")))
+
+(cond ((not (pref-font))) ;; Do nothing
+      ((daemonp) (add-hook 'after-make-frame-functions
+                           (lambda (frame)
+                             (select-frame frame)
+                             (set-frame-font (pref-font)))))
+      ((window-system) (set-frame-font (pref-font))))
 
 (setq font-lock-maximum-decoration t)
 
@@ -168,6 +197,7 @@
         org-startup-folded nil
         org-log-done nil))
 
+
 (use-package recentf
   :ensure t
   :config
@@ -269,6 +299,7 @@
         helm-semantic-fuzzy-match t
         helm-imenu-fuzzy-match t))
 
+
 (use-package helm-ls-git
   :bind ("C-c C-p" . helm-browse-project))
 
@@ -361,7 +392,8 @@
                  (lambda () (interactive)
                    (python-nav-forward-defun)
                    (recenter 10)))
-  (setq-default py-split-windows-on-execute-function 'split-window-vertically))
+  (setq-default py-split-windows-on-execute-function 'split-window-vertically)
+  (define-key python-mode-map "C-c C-p" nil))
 
 (add-hook 'python-mode-hook 'python-hook)
 
@@ -392,12 +424,16 @@
   :defer t
   :config
   ;(matlab-cedet-setup)
-  (setq matlab-indent-function t)
+  (setq matlab-indent-function-body t)
   (auto-complete-mode 1)
   :bind (:map matlab-mode-map
               ("<C-return>" . matlab-shell-run-region-or-line)
               ("<C-enter>" . matlab-shell-run-region-or-line)
-              ("C-c C-m" . matlab-shell)))
+              ("C-c C-m" . matlab-shell)
+              ("<M-down>" . matlab-end-of-defun)
+              ("<M-up>" . matlab-beginning-of-defun)
+              ("M-n" . matlab-end-of-defun)
+              ("M-p" . matlab-beginning-of-defun)))
 
 
 ;; LaTeX
