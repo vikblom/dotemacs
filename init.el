@@ -95,7 +95,7 @@
 
 
 ;; SCROLLING
-(setq mouse-wheel-scroll-amount '(2 ((shift) . 1))
+(setq mouse-wheel-scroll-amount '(3 ((shift) . 1))
       mouse-wheel-progressive-speed nil
       mouse-wheel-follow-mouse 't
       scroll-step 1
