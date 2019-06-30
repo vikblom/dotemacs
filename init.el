@@ -251,6 +251,8 @@ end up leaving point on a space or newline character."
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
 
+(use-package lispy
+  :defer t)
 
 (use-package comint
   :bind (:map comint-mode-map
