@@ -370,6 +370,9 @@ end up leaving point on a space or newline character."
 ;;   :hook geiser-mode)
 
 
+;; GO-lang
+(use-package go-mode)
+
 ;; Julia-lang
 (use-package julia-mode
   :onlyif (executable-find "julia")
