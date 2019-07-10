@@ -11,7 +11,7 @@
 
 (setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/:~/local/bin/"))
 (setq exec-path (append exec-path '("~/.local/bin/" "~/local/bin/")))
-(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
+;;(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
 
 (defun init ()
   (interactive)
@@ -371,7 +371,9 @@ end up leaving point on a space or newline character."
 
 
 ;; GO-lang
-(use-package go-mode)
+(use-package go-mode
+  :config
+  (setq exec-path (append exec-path '("~/kod/go/bin/"))))
 
 ;; Julia-lang
 (use-package julia-mode
