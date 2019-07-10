@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; Set up package managing
+;;; Set up package managing
 (package-initialize)
 (load "~/.emacs.d/pkg.el")
 (setq custom-file "~/.emacs.d/custom.el")
@@ -105,10 +105,10 @@ end up leaving point on a space or newline character."
        (global-set-key (kbd "C-<prior>") (lambda ()
                                            (interactive)
                                            (other-window -1)))
-       (global-set-key (kbd "C-å") 'previous-multiframe-window)
-       (global-set-key (kbd "C-ä") 'next-multiframe-window)
-       (global-set-key (kbd "M-å") 'previous-buffer)
-       (global-set-key (kbd "M-ä") 'next-buffer)
+       (global-set-key (kbd "M-[") 'previous-multiframe-window)
+       (global-set-key (kbd "M-]") 'next-multiframe-window)
+       ;;(global-set-key (kbd "M-[") 'previous-buffer)
+       ;;(global-set-key (kbd "M-]") 'next-buffer)
 
        (global-set-key (kbd "<C-tab>") 'hippie-expand)
        (global-set-key (kbd "C-TAB") 'hippie-expand)
@@ -357,9 +357,9 @@ end up leaving point on a space or newline character."
 
 ;; Scheme-lang
 (use-package geiser
-  :onlyif (executable-find "chicken")
+  :onlyif (executable-find "chezscheme")
   :config
-  (setq geiser-active-implementations '(chicken)
+  (setq geiser-active-implementations '(chez)
         geiser-chicken-compile-geiser-p nil))
 
 
@@ -479,3 +479,4 @@ end up leaving point on a space or newline character."
 ;;     (local-set-key (kbd "<C-S-enter>") 'TeX-command-run-all)
 ;;     (add-hook 'LaTeX-mode-hook 'my-LaTeX-mode)
 ;;     ))
+(put 'upcase-region 'disabled nil)
