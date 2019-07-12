@@ -9,7 +9,7 @@
 ;; Deps
 (require 'seq)
 
-(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/:~/local/bin/"))
+(setenv "PATH" (concat (getenv "PATH") ":" "~/.local/bin/" ":" "~/local/bin/"))
 (setq exec-path (append exec-path '("~/.local/bin/" "~/local/bin/")))
 ;;(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
 
@@ -347,14 +347,15 @@ end up leaving point on a space or newline character."
 
 (use-package ctags-update
   :onlyif (executable-find "ctags")
-  :defer t
   :bind (:map c-mode-map ("<f5>" . ctags-update)))
 
 (use-package clang-format
   :onlyif (executable-find "clang-format")
+  :defer t
   :config
   (setq clang-format-style "{BasedOnStyle: WebKit, PointerAlignment: Right}")
-  :bind ("C-c f" . clang-format-buffer))
+  ;:bind (:map c-mode-map ("C-c f" . clang-format-buffer))
+  )
 
 
 ;; Scheme-lang
@@ -373,7 +374,15 @@ end up leaving point on a space or newline character."
 ;; GO-lang
 (use-package go-mode
   :config
-  (setq exec-path (append exec-path '("~/kod/go/bin/"))))
+  (setenv "GOPATH" "~/kod/go/")
+  (setenv "GOBIN" "~/kod/go/bin/")
+  (setenv "PATH" (concat (getenv "PATH") ":" (getenv "GOBIN")))
+  (setq exec-path (append exec-path (list (getenv "GOBIN"))))
+  (with-eval-after-load 'go-mode
+    (require 'go-autocomplete))
+  :bind (:map go-mode-map
+              ("M-." . godef-jump)
+              ("C-c C-j" . nil)))
 
 ;; Julia-lang
 (use-package julia-mode
