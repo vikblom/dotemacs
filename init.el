@@ -216,11 +216,11 @@ end up leaving point on a space or newline character."
   :ensure t
   :config
   (yas-global-mode 1)
-  (use-package yasnippet-snippets)
   :bind (:map yas-minor-mode-map
               ("<tab>" . nil)
               ("TAB" . nil)
               ("<backtab>" . yas-expand)))
+(use-package yasnippet-snippets)
 
 
 (use-package auto-complete
