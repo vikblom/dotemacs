@@ -52,8 +52,8 @@ end up leaving point on a space or newline character."
 (defun font-exist-p (font) (find-font (font-spec :name font)))
 
 (defun pref-font ()
-  (seq-find 'font-exist-p '("Roboto Mono-10"
-                            "Inconsolata-11"
+  (seq-find 'font-exist-p '("Inconsolata-11"
+                            "Roboto Mono-10"
                             "DejaVu Sans Mono-10")))
 
 (cond ((not (pref-font))) ;; Do nothing
@@ -61,7 +61,7 @@ end up leaving point on a space or newline character."
                            (lambda (frame)
                              (select-frame frame)
                              (set-frame-font (pref-font)))))
-      ((window-system) (set-frame-font (pref-font))))
+      (window-system (set-frame-font (pref-font))))
 
 (setq font-lock-maximum-decoration t)
 
@@ -200,10 +200,13 @@ end up leaving point on a space or newline character."
 
 (use-package recentf
   :ensure t
-  :config
+  :init
   (recentf-mode 1)
   (setq recentf-max-menu-items 25)
+  (run-with-timer 0 (* 5 60) 'recentf-save-list)
+  ;;(add-hook 'server-done-hook 'recentf-save-list)
   :bind ("C-x C-r" . recentf-open-files))
+
 
 
 (use-package magit
