@@ -10,7 +10,7 @@
 (require 'seq)
 
 (setenv "PATH" (concat (getenv "PATH") ":" "~/.local/bin/" ":" "~/local/bin/"))
-(setq exec-path (append exec-path '("~/.local/bin/" "~/local/bin/")))
+(setq exec-path (append '("~/.local/bin/" "~/local/bin/") exec-path))
 ;;(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
 
 (defun init ()
@@ -80,7 +80,8 @@ end up leaving point on a space or newline character."
        (setq auto-revert-remote-files t)
        (setq split-width-threshold 140)
        (setq require-final-newline t)
-       (setq bookmark-save-flag 1))
+       (setq bookmark-save-flag 1)
+       (fset 'yes-or-no-p 'y-or-n-p))
 
 ;; INDENTATION
 (setq-default indent-tabs-mode nil
@@ -349,6 +350,14 @@ end up leaving point on a space or newline character."
   :onlyif (executable-find "ctags")
   :bind (:map c-mode-map ("<f5>" . ctags-update)))
 
+
+(defun create-etags (dir-name)
+  "Create tags file."
+  (interactive "DDirectory: ")
+  (let ((default-directory dir-name))
+    (eshell-command
+     (format "find %s -type f -name \"*.[ch]\" | etags -" dir-name))))
+
 (use-package clang-format
   :onlyif (executable-find "clang-format")
   :defer t
@@ -360,9 +369,9 @@ end up leaving point on a space or newline character."
 
 ;; Scheme-lang
 (use-package geiser
-  :onlyif (executable-find "chezscheme")
+  :onlyif (executable-find "csi")
   :config
-  (setq geiser-active-implementations '(chez)
+  (setq geiser-active-implementations '(chicken)
         geiser-chicken-compile-geiser-p nil))
 
 
