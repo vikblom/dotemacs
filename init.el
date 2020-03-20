@@ -56,7 +56,7 @@ end up leaving point on a space or newline character."
                             "Inconsolata-11"
                             "DejaVu Sans Mono-10")))
 
-(add-to-list 'default-frame-alist (cons 'font (pref-font)))
+(add-to-list 'default-frame-alist '(font . "Roboto Mono-10"))
 
 (setq font-lock-maximum-decoration t)
 
@@ -84,7 +84,8 @@ end up leaving point on a space or newline character."
 (setq-default indent-tabs-mode nil
               transient-mark-mode t
               tab-width 4
-              truncate-lines 'nil)
+              truncate-lines 'nil
+              truncate-partial-width-windows 'nil)
 
 ;; KEYBINDS
 (progn (global-set-key [f6] 'toggle-truncate-lines)
@@ -409,8 +410,8 @@ end up leaving point on a space or newline character."
 (defun python-hook ()
   (setq python-shell-interpreter "ipython3"
         python-indent 4)
-  ;; (setq python-shell-interpreter-args
-  ;;       "-c \"%load_ext autoreload\" --simple-prompt -i")
+  (setq python-shell-interpreter-args
+        "-c \"%load_ext autoreload\" --simple-prompt -i")
   (setq python-shell-interpreter-args "-i")
   (defun refresh ()
     (interactive)
