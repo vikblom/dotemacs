@@ -435,7 +435,7 @@ end up leaving point on a space or newline character."
                    (python-nav-forward-defun)
                    (recenter 10)))
   (setq-default py-split-windows-on-execute-function 'split-window-vertically)
-  (define-key python-mode-map "C-c C-p" nil))
+  (define-key python-mode-map (kbd "C-c C-p") nil))
 
 (add-hook 'python-mode-hook 'python-hook)
 
