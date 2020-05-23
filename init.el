@@ -44,7 +44,7 @@ end up leaving point on a space or newline character."
     ;; now point is after the match, let's go back one column.
     (forward-char -1)))
 
-;; Fonts
+;; FONT
 (require 'iso-transl)
 (prefer-coding-system 'utf-8)
 (global-font-lock-mode t)
@@ -56,12 +56,7 @@ end up leaving point on a space or newline character."
                             "Inconsolata-11"
                             "DejaVu Sans Mono-10")))
 
-(cond ((not (pref-font))) ;; Do nothing
-      ((daemonp) (add-hook 'after-make-frame-functions
-                           (lambda (frame)
-                             (select-frame frame)
-                             (set-frame-font (pref-font)))))
-      ((window-system) (set-frame-font (pref-font))))
+(add-to-list 'default-frame-alist '(font . "Roboto Mono-10"))
 
 (setq font-lock-maximum-decoration t)
 
@@ -81,12 +76,16 @@ end up leaving point on a space or newline character."
        (setq split-width-threshold 140)
        (setq require-final-newline t)
        (setq bookmark-save-flag 1)
-       (fset 'yes-or-no-p 'y-or-n-p))
+       (fset 'yes-or-no-p 'y-or-n-p)
+       (put 'upcase-region 'disabled nil)
+       (put 'downcase-region 'disabled nil))
 
 ;; INDENTATION
 (setq-default indent-tabs-mode nil
               transient-mark-mode t
-              tab-width 4)
+              tab-width 4
+              truncate-lines 'nil
+              truncate-partial-width-windows 'nil)
 
 ;; KEYBINDS
 (progn (global-set-key [f6] 'toggle-truncate-lines)
@@ -148,6 +147,7 @@ end up leaving point on a space or newline character."
 (defmacro with-face (str &rest properties)
   `(propertize ,str 'face (list ,@properties)))
 
+
 ;; Stack Overflow header for each open buffer
 (load "~/.emacs.d/header.el")
 
@@ -191,8 +191,8 @@ end up leaving point on a space or newline character."
 ;; Global packages
 (use-package org
   :config
-  (define-key global-map "\C-c l" 'org-store-link)
-  (define-key global-map "\C-c a" 'org-agenda)
+  (define-key global-map (kbd "C-c l") 'org-store-link)
+  (define-key global-map (kbd "C-c a") 'org-agenda)
   (setq org-agenda-files (list "~/org")
         org-cycle-separator-lines 1
         org-startup-folded nil
@@ -201,10 +201,13 @@ end up leaving point on a space or newline character."
 
 (use-package recentf
   :ensure t
-  :config
+  :init
   (recentf-mode 1)
   (setq recentf-max-menu-items 25)
+  (run-with-timer 0 (* 5 60) 'recentf-save-list)
+  ;;(add-hook 'server-done-hook 'recentf-save-list)
   :bind ("C-x C-r" . recentf-open-files))
+
 
 
 (use-package magit
@@ -417,6 +420,7 @@ end up leaving point on a space or newline character."
         python-indent 4)
   (setq python-shell-interpreter-args
         "-c \"%load_ext autoreload\" --simple-prompt -i")
+  (setq python-shell-interpreter-args "-i")
   (defun refresh ()
     (interactive)
     (save-some-buffers)
@@ -504,4 +508,3 @@ end up leaving point on a space or newline character."
 ;;     (local-set-key (kbd "<C-S-enter>") 'TeX-command-run-all)
 ;;     (add-hook 'LaTeX-mode-hook 'my-LaTeX-mode)
 ;;     ))
-(put 'upcase-region 'disabled nil)
