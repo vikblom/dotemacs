@@ -60,6 +60,7 @@ end up leaving point on a space or newline character."
 
 (setq font-lock-maximum-decoration t)
 
+
 ;; BACKUP
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups/")))
 (setq backup-by-copying t)
@@ -327,6 +328,9 @@ end up leaving point on a space or newline character."
   :bind ("C-c C-p" . helm-browse-project))
 
 
+;; Today mode
+(load "~/.emacs.d/today-mode.el")
+
 ;; C-lang
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -397,20 +401,20 @@ end up leaving point on a space or newline character."
               ("C-c C-j" . nil)))
 
 ;; Julia-lang
-(use-package julia-mode
-  :onlyif (executable-find "julia")
-  :config
-  (setq auto-mode-alist (delq (assoc "\\.jl\\'" auto-mode-alist) auto-mode-alist))
-  :mode ("\\.jl\\'" . julia-mode))
+;; (use-package julia-mode
+;;   :onlyif (executable-find "julia")
+;;   :config
+;;   (setq auto-mode-alist (delq (assoc "\\.jl\\'" auto-mode-alist) auto-mode-alist))
+;;   :mode ("\\.jl\\'" . julia-mode))
 
-(use-package julia-repl
-  :onlyif (executable-find "julia")
-  :config
-  (add-hook 'julia-mode-hook 'julia-repl-mode)
-  :bind (:map julia-mode-map
-              ("C-c C-j" . julia-repl)
-              ("<C-return>" . julia-repl-send-region-or-line)
-              ("<C-enter>" . julia-repl-send-region-or-line)))
+;; (use-package julia-repl
+;;   :onlyif (executable-find "julia")
+;;   :config
+;;   (add-hook 'julia-mode-hook 'julia-repl-mode)
+;;   :bind (:map julia-mode-map
+;;               ("C-c C-j" . julia-repl)
+;;               ("<C-return>" . julia-repl-send-region-or-line)
+;;               ("<C-enter>" . julia-repl-send-region-or-line)))
 
 
 
@@ -418,9 +422,8 @@ end up leaving point on a space or newline character."
 (defun python-hook ()
   (setq python-shell-interpreter "ipython3"
         python-indent 4)
-  (setq python-shell-interpreter-args
-        "-c \"%load_ext autoreload\" --simple-prompt -i")
-  (setq python-shell-interpreter-args "-i")
+  (setq python-shell-interpreter-args "-c \"%load_ext autoreload\" --simple-prompt -i")
+  ;;(setq python-shell-interpreter-args "-i")
   (defun refresh ()
     (interactive)
     (save-some-buffers)
