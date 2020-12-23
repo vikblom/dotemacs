@@ -9,8 +9,8 @@
 ;; Deps
 (require 'seq)
 
-(setenv "PATH" (concat (getenv "PATH") ":~/.local/bin/:~/local/bin/"))
-(setq exec-path (append exec-path '("~/.local/bin/" "~/local/bin/")))
+(setenv "PATH" (concat (getenv "PATH") ":" "~/.local/bin/" ":" "~/local/bin/"))
+(setq exec-path (append '("~/.local/bin/" "~/local/bin/") exec-path))
 ;;(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
 
 (defun init ()
@@ -44,7 +44,7 @@ end up leaving point on a space or newline character."
     ;; now point is after the match, let's go back one column.
     (forward-char -1)))
 
-;; Fonts
+;; FONT
 (require 'iso-transl)
 (prefer-coding-system 'utf-8)
 (global-font-lock-mode t)
@@ -56,14 +56,10 @@ end up leaving point on a space or newline character."
                             "Inconsolata-11"
                             "DejaVu Sans Mono-10")))
 
-(cond ((not (pref-font))) ;; Do nothing
-      ((daemonp) (add-hook 'after-make-frame-functions
-                           (lambda (frame)
-                             (select-frame frame)
-                             (set-frame-font (pref-font)))))
-      ((window-system) (set-frame-font (pref-font))))
+(add-to-list 'default-frame-alist '(font . "Roboto Mono-10"))
 
 (setq font-lock-maximum-decoration t)
+
 
 ;; BACKUP
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups/")))
@@ -80,12 +76,17 @@ end up leaving point on a space or newline character."
        (setq auto-revert-remote-files t)
        (setq split-width-threshold 140)
        (setq require-final-newline t)
-       (setq bookmark-save-flag 1))
+       (setq bookmark-save-flag 1)
+       (fset 'yes-or-no-p 'y-or-n-p)
+       (put 'upcase-region 'disabled nil)
+       (put 'downcase-region 'disabled nil))
 
 ;; INDENTATION
 (setq-default indent-tabs-mode nil
               transient-mark-mode t
-              tab-width 4)
+              tab-width 4
+              truncate-lines 'nil
+              truncate-partial-width-windows 'nil)
 
 ;; KEYBINDS
 (progn (global-set-key [f6] 'toggle-truncate-lines)
@@ -147,6 +148,7 @@ end up leaving point on a space or newline character."
 (defmacro with-face (str &rest properties)
   `(propertize ,str 'face (list ,@properties)))
 
+
 ;; Stack Overflow header for each open buffer
 (load "~/.emacs.d/header.el")
 
@@ -190,8 +192,8 @@ end up leaving point on a space or newline character."
 ;; Global packages
 (use-package org
   :config
-  (define-key global-map "\C-c l" 'org-store-link)
-  (define-key global-map "\C-c a" 'org-agenda)
+  (define-key global-map (kbd "C-c l") 'org-store-link)
+  (define-key global-map (kbd "C-c a") 'org-agenda)
   (setq org-agenda-files (list "~/org")
         org-cycle-separator-lines 1
         org-startup-folded nil
@@ -200,10 +202,13 @@ end up leaving point on a space or newline character."
 
 (use-package recentf
   :ensure t
-  :config
+  :init
   (recentf-mode 1)
   (setq recentf-max-menu-items 25)
+  (run-with-timer 0 (* 5 60) 'recentf-save-list)
+  ;;(add-hook 'server-done-hook 'recentf-save-list)
   :bind ("C-x C-r" . recentf-open-files))
+
 
 
 (use-package magit
@@ -323,6 +328,9 @@ end up leaving point on a space or newline character."
   :bind ("C-c C-p" . helm-browse-project))
 
 
+;; Today mode
+(load "~/.emacs.d/today-mode.el")
+
 ;; C-lang
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -347,21 +355,30 @@ end up leaving point on a space or newline character."
 
 (use-package ctags-update
   :onlyif (executable-find "ctags")
-  :defer t
   :bind (:map c-mode-map ("<f5>" . ctags-update)))
+
+
+(defun create-etags (dir-name)
+  "Create tags file."
+  (interactive "DDirectory: ")
+  (let ((default-directory dir-name))
+    (eshell-command
+     (format "find %s -type f -name \"*.[ch]\" | etags -" dir-name))))
 
 (use-package clang-format
   :onlyif (executable-find "clang-format")
+  :defer t
   :config
   (setq clang-format-style "{BasedOnStyle: WebKit, PointerAlignment: Right}")
-  :bind ("C-c f" . clang-format-buffer))
+  ;:bind (:map c-mode-map ("C-c f" . clang-format-buffer))
+  )
 
 
 ;; Scheme-lang
 (use-package geiser
-  :onlyif (executable-find "chezscheme")
+  :onlyif (executable-find "csi")
   :config
-  (setq geiser-active-implementations '(chez)
+  (setq geiser-active-implementations '(chicken)
         geiser-chicken-compile-geiser-p nil))
 
 
@@ -373,23 +390,31 @@ end up leaving point on a space or newline character."
 ;; GO-lang
 (use-package go-mode
   :config
-  (setq exec-path (append exec-path '("~/kod/go/bin/"))))
+  (setenv "GOPATH" "~/kod/go/")
+  (setenv "GOBIN" "~/kod/go/bin/")
+  (setenv "PATH" (concat (getenv "PATH") ":" (getenv "GOBIN")))
+  (setq exec-path (append exec-path (list (getenv "GOBIN"))))
+  (with-eval-after-load 'go-mode
+    (require 'go-autocomplete))
+  :bind (:map go-mode-map
+              ("M-." . godef-jump)
+              ("C-c C-j" . nil)))
 
 ;; Julia-lang
-(use-package julia-mode
-  :onlyif (executable-find "julia")
-  :config
-  (setq auto-mode-alist (delq (assoc "\\.jl\\'" auto-mode-alist) auto-mode-alist))
-  :mode ("\\.jl\\'" . julia-mode))
+;; (use-package julia-mode
+;;   :onlyif (executable-find "julia")
+;;   :config
+;;   (setq auto-mode-alist (delq (assoc "\\.jl\\'" auto-mode-alist) auto-mode-alist))
+;;   :mode ("\\.jl\\'" . julia-mode))
 
-(use-package julia-repl
-  :onlyif (executable-find "julia")
-  :config
-  (add-hook 'julia-mode-hook 'julia-repl-mode)
-  :bind (:map julia-mode-map
-              ("C-c C-j" . julia-repl)
-              ("<C-return>" . julia-repl-send-region-or-line)
-              ("<C-enter>" . julia-repl-send-region-or-line)))
+;; (use-package julia-repl
+;;   :onlyif (executable-find "julia")
+;;   :config
+;;   (add-hook 'julia-mode-hook 'julia-repl-mode)
+;;   :bind (:map julia-mode-map
+;;               ("C-c C-j" . julia-repl)
+;;               ("<C-return>" . julia-repl-send-region-or-line)
+;;               ("<C-enter>" . julia-repl-send-region-or-line)))
 
 
 
@@ -397,8 +422,8 @@ end up leaving point on a space or newline character."
 (defun python-hook ()
   (setq python-shell-interpreter "ipython3"
         python-indent 4)
-  (setq python-shell-interpreter-args
-        "-c \"%load_ext autoreload\" --simple-prompt -i")
+  (setq python-shell-interpreter-args "-c \"%load_ext autoreload\" --simple-prompt -i")
+  ;;(setq python-shell-interpreter-args "-i")
   (defun refresh ()
     (interactive)
     (save-some-buffers)
@@ -486,4 +511,3 @@ end up leaving point on a space or newline character."
 ;;     (local-set-key (kbd "<C-S-enter>") 'TeX-command-run-all)
 ;;     (add-hook 'LaTeX-mode-hook 'my-LaTeX-mode)
 ;;     ))
-(put 'upcase-region 'disabled nil)
