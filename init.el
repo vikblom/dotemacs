@@ -216,11 +216,11 @@ end up leaving point on a space or newline character."
   :ensure t
   :config
   (yas-global-mode 1)
-  (use-package yasnippet-snippets)
   :bind (:map yas-minor-mode-map
               ("<tab>" . nil)
               ("TAB" . nil)
               ("<backtab>" . yas-expand)))
+(use-package yasnippet-snippets)
 
 
 (use-package auto-complete
@@ -417,7 +417,7 @@ end up leaving point on a space or newline character."
                    (python-nav-forward-defun)
                    (recenter 10)))
   (setq-default py-split-windows-on-execute-function 'split-window-vertically)
-  (define-key python-mode-map "C-c C-p" nil))
+  (define-key python-mode-map (kbd "C-c C-p") nil))
 
 (add-hook 'python-mode-hook 'python-hook)
 
