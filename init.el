@@ -225,7 +225,7 @@ end up leaving point on a space or newline character."
               ("<tab>" . nil)
               ("TAB" . nil)
               ("<backtab>" . yas-expand)))
-(use-package yasnippet-snippets)
+;;(use-package yasnippet-snippets)
 
 
 (use-package auto-complete
@@ -390,10 +390,10 @@ end up leaving point on a space or newline character."
 ;; GO-lang
 (use-package go-mode
   :config
-  (setenv "GOPATH" "~/kod/go/")
-  (setenv "GOBIN" "~/kod/go/bin/")
-  (setenv "PATH" (concat (getenv "PATH") ":" (getenv "GOBIN")))
-  (setq exec-path (append exec-path (list (getenv "GOBIN"))))
+  ;; (setenv "GOPATH" "~/kod/go/")
+  ;; (setenv "GOBIN" "~/kod/go/bin/")
+  ;; (setenv "PATH" (concat (getenv "PATH") ":" (getenv "GOBIN")))
+  ;; (setq exec-path (append exec-path (list (getenv "GOBIN"))))
   (with-eval-after-load 'go-mode
     (require 'go-autocomplete))
   :bind (:map go-mode-map
