@@ -228,14 +228,14 @@ end up leaving point on a space or newline character."
 ;;(use-package yasnippet-snippets)
 
 
-(use-package auto-complete
-  :ensure t
-  :config
-  (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
-  (ac-config-default)
-  (ac-set-trigger-key "TAB")
-  (ac-set-trigger-key "<tab>")
-  (setq ac-auto-start nil))
+;; (use-package auto-complete
+;;   :ensure t
+;;   :config
+;;   (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
+;;   (ac-config-default)
+;;   (ac-set-trigger-key "TAB")
+;;   (ac-set-trigger-key "<tab>")
+;;   (setq ac-auto-start nil))
 
 
 (use-package paredit
@@ -328,6 +328,25 @@ end up leaving point on a space or newline character."
   :bind ("C-c C-p" . helm-browse-project))
 
 
+(use-package lsp-mode
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook ((go-mode . lsp)
+         (go-mode . (lambda ()
+                      (add-hook 'before-save-hook #'lsp-format-buffer t t)
+                      (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp)
+(use-package helm-lsp
+  :commands helm-lsp-workspace-symbol)
+
+
+(use-package company
+  ;; :bind
+  ;; ("TAB" . company-complete)
+  ;; ("<C-tab>" . company-complete)
+  )
+
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
 
@@ -388,17 +407,19 @@ end up leaving point on a space or newline character."
 
 
 ;; GO-lang
+;; go get golang.org/x/tools/cmd/godoc
+;; go get github.com/rogpeppe/godef
+;; GO111MODULE=on go get golang.org/x/tools/gopls@latest
 (use-package go-mode
   :config
-  ;; (setenv "GOPATH" "~/kod/go/")
-  ;; (setenv "GOBIN" "~/kod/go/bin/")
-  ;; (setenv "PATH" (concat (getenv "PATH") ":" (getenv "GOBIN")))
-  ;; (setq exec-path (append exec-path (list (getenv "GOBIN"))))
-  (with-eval-after-load 'go-mode
-    (require 'go-autocomplete))
-  :bind (:map go-mode-map
-              ("M-." . godef-jump)
-              ("C-c C-j" . nil)))
+  (setenv "PATH" (concat (expand-file-name "~/go/bin") ":" (getenv "PATH")))
+  (setq exec-path (append exec-path (list (expand-file-name "~/go/bin"))))
+  ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
+  ;;(add-hook 'before-save-hook 'gofmt-before-save)
+  ;;:bind (:map go-mode-map
+  ;;            ("M-." . godef-jump)
+  ;;            ("C-c C-j" . nil))
+  )
 
 ;; Julia-lang
 ;; (use-package julia-mode
@@ -474,7 +495,6 @@ end up leaving point on a space or newline character."
   :config
   ;(matlab-cedet-setup)
   (setq matlab-indent-function-body t)
-  (auto-complete-mode 1)
   :bind (:map matlab-mode-map
               ("<C-return>" . matlab-shell-run-region-or-line)
               ("<C-enter>" . matlab-shell-run-region-or-line)
