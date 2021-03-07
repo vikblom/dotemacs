@@ -1,6 +1,5 @@
 ;;; -*- lexical-binding: t; -*-
 
-
 (defun today-file ()
   (concat
    user-emacs-directory

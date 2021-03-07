@@ -6,13 +6,6 @@
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
-;; Deps
-(require 'seq)
-
-(setenv "PATH" (concat (getenv "PATH") ":" "~/.local/bin/" ":" "~/local/bin/"))
-(setq exec-path (append '("~/.local/bin/" "~/local/bin/") exec-path))
-;;(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
-
 (defun init ()
   (interactive)
   (find-file "~/.emacs.d/init.el"))
@@ -110,9 +103,6 @@ end up leaving point on a space or newline character."
        (global-set-key (kbd "M-]") 'next-multiframe-window)
        ;;(global-set-key (kbd "M-[") 'previous-buffer)
        ;;(global-set-key (kbd "M-]") 'next-buffer)
-
-       (global-set-key (kbd "<C-tab>") 'hippie-expand)
-       (global-set-key (kbd "C-TAB") 'hippie-expand)
 
        (global-unset-key (kbd "C-<end>"))
        (global-unset-key (kbd "M-<home>"))
@@ -328,24 +318,27 @@ end up leaving point on a space or newline character."
   :bind ("C-c C-p" . helm-browse-project))
 
 
+(use-package company
+  :ensure t
+  :bind (:map company-mode-map
+              ("C-TAB" . company-complete)
+              ("<C-tab>" . company-complete)))
+
 (use-package lsp-mode
+  :ensure t
   :init
   (setq lsp-keymap-prefix "C-c l")
-  :hook ((go-mode . lsp)
-         (go-mode . (lambda ()
-                      (add-hook 'before-save-hook #'lsp-format-buffer t t)
-                      (add-hook 'before-save-hook #'lsp-organize-imports t t)))
-         (lsp-mode . lsp-enable-which-key-integration))
+  :hook ((lsp-mode . lsp-enable-which-key-integration)
+         (go-mode . lsp-deferred)
+         ;; (go-mode . (lambda ()
+         ;;              (add-hook 'before-save-hook #'lsp-format-buffer t t)
+         ;;              (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+         )
   :commands lsp)
+
 (use-package helm-lsp
+  :ensure t
   :commands helm-lsp-workspace-symbol)
-
-
-(use-package company
-  ;; :bind
-  ;; ("TAB" . company-complete)
-  ;; ("<C-tab>" . company-complete)
-  )
 
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
@@ -401,24 +394,18 @@ end up leaving point on a space or newline character."
         geiser-chicken-compile-geiser-p nil))
 
 
-;; (use-package ac-geiser
-;;   :onlyif (executable-find "chicken")
-;;   :hook geiser-mode)
-
-
 ;; GO-lang
 ;; go get golang.org/x/tools/cmd/godoc
 ;; go get github.com/rogpeppe/godef
 ;; GO111MODULE=on go get golang.org/x/tools/gopls@latest
 (use-package go-mode
-  :config
-  (setenv "PATH" (concat (expand-file-name "~/go/bin") ":" (getenv "PATH")))
-  (setq exec-path (append exec-path (list (expand-file-name "~/go/bin"))))
+  :onlyif (executable-find "go")
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
-  ;;:bind (:map go-mode-map
-  ;;            ("M-." . godef-jump)
-  ;;            ("C-c C-j" . nil))
+  :bind (:map go-mode-map
+              ("M-." . godef-jump)
+              ;("C-c C-j" . nil)
+              )
   )
 
 ;; Julia-lang
