@@ -49,7 +49,10 @@ end up leaving point on a space or newline character."
                             "Inconsolata-11"
                             "DejaVu Sans Mono-10")))
 
-(add-to-list 'default-frame-alist '(font . "Roboto Mono-10"))
+(set-face-attribute 'variable-pitch
+                    nil
+                    :family "Inconsolata")
+(add-to-list 'default-frame-alist '(font . "Inconsolata-11"))
 
 (setq font-lock-maximum-decoration t)
 
@@ -121,6 +124,8 @@ end up leaving point on a space or newline character."
       scroll-margin 5)
 
 ;; APPEARANCE
+(setq fancy-splash-image "~/.emacs.d/misc/emacs.png")
+
 (progn (setq frame-resize-pixelwise t)
        (tool-bar-mode -1)
        (scroll-bar-mode -1)
@@ -158,6 +163,8 @@ end up leaving point on a space or newline character."
   :config
   (setq srcery-black "#050505"))
 
+(use-package ample-theme
+  :ensure t)
 
 (defun find-theme (theme)
   "Finds source .el of a theme by name. Nil if not on path."
@@ -166,7 +173,8 @@ end up leaving point on a space or newline character."
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (seq-find 'find-theme '(srcery
+  (seq-find 'find-theme '(ample-flat
+                          srcery
                           dracula
                           noctilux
                           wombat
