@@ -336,6 +336,8 @@ end up leaving point on a space or newline character."
   :ensure t
   :init
   (setq lsp-keymap-prefix "C-c l")
+  :config
+  (setq lsp-diagnostic-package :none)
   :hook ((lsp-mode . lsp-enable-which-key-integration)
          (go-mode . lsp-deferred)
          ;; (go-mode . (lambda ()
@@ -403,9 +405,9 @@ end up leaving point on a space or newline character."
 
 
 ;; GO-lang
-;; go get golang.org/x/tools/cmd/godoc
-;; go get github.com/rogpeppe/godef
-;; GO111MODULE=on go get golang.org/x/tools/gopls@latest
+;; go get golang.org/x/tools/cmd/...
+;; go get golang.org/x/tools/gopls@latest
+;; ?go get github.com/rogpeppe/godef
 (use-package go-mode
   :onlyif (executable-find "go")
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
