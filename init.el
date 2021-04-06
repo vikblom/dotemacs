@@ -1,6 +1,7 @@
 ;;; -*- lexical-binding: t; -*-
 
 ;;; Set up package managing
+;;(setq package-check-signature nil)
 (package-initialize)
 (load "~/.emacs.d/pkg.el")
 (setq custom-file "~/.emacs.d/custom.el")
@@ -17,7 +18,7 @@
   (interactive)
   (find-file "~/.emacs.d/init.el"))
 
-(defun today ()
+(defun write-today ()
   (interactive)
   (insert (format-time-string "%Y-%m-%d")))
 
@@ -288,7 +289,7 @@ end up leaving point on a space or newline character."
   (set-face-attribute 'whitespace-tab
                       nil
                       :foreground "#999999")
-  (setq whitespace-style '(face trailing lines-tail))
+  (setq whitespace-style '(face trailing))
   (setq whitespace-line-column 80)
   (add-hook 'prog-mode-hook 'whitespace-mode))
 
@@ -363,7 +364,8 @@ end up leaving point on a space or newline character."
   (interactive "DDirectory: ")
   (let ((default-directory dir-name))
     (eshell-command
-     (format "find %s -type f -name \"*.[ch]\" | etags -" dir-name))))
+     (format "find %s -type f -name \"*.[ch]\" | etags -" dir-name))
+    (visit-tags-table (concat dir-name "TAGS"))))
 
 (use-package clang-format
   :onlyif (executable-find "clang-format")
