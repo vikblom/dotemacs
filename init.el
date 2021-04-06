@@ -7,13 +7,6 @@
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
-;; Deps
-(require 'seq)
-
-(setenv "PATH" (concat (getenv "PATH") ":" "~/.local/bin/" ":" "~/local/bin/"))
-(setq exec-path (append '("~/.local/bin/" "~/local/bin/") exec-path))
-;;(setq load-path (append load-path '("~/.local/bin/" "~/local/bin/")))
-
 (defun init ()
   (interactive)
   (find-file "~/.emacs.d/init.el"))
@@ -57,7 +50,10 @@ end up leaving point on a space or newline character."
                             "Inconsolata-11"
                             "DejaVu Sans Mono-10")))
 
-(add-to-list 'default-frame-alist '(font . "Roboto Mono-10"))
+(set-face-attribute 'variable-pitch
+                    nil
+                    :family "Inconsolata")
+(add-to-list 'default-frame-alist '(font . "Inconsolata-11"))
 
 (setq font-lock-maximum-decoration t)
 
@@ -112,9 +108,6 @@ end up leaving point on a space or newline character."
        ;;(global-set-key (kbd "M-[") 'previous-buffer)
        ;;(global-set-key (kbd "M-]") 'next-buffer)
 
-       (global-set-key (kbd "<C-tab>") 'hippie-expand)
-       (global-set-key (kbd "C-TAB") 'hippie-expand)
-
        (global-unset-key (kbd "C-<end>"))
        (global-unset-key (kbd "M-<home>"))
        (global-unset-key (kbd "C-x C-SPC"))
@@ -132,6 +125,8 @@ end up leaving point on a space or newline character."
       scroll-margin 5)
 
 ;; APPEARANCE
+(setq fancy-splash-image "~/.emacs.d/misc/emacs.png")
+
 (progn (setq frame-resize-pixelwise t)
        (tool-bar-mode -1)
        (scroll-bar-mode -1)
@@ -169,6 +164,8 @@ end up leaving point on a space or newline character."
   :config
   (setq srcery-black "#050505"))
 
+(use-package ample-theme
+  :ensure t)
 
 (defun find-theme (theme)
   "Finds source .el of a theme by name. Nil if not on path."
@@ -177,7 +174,8 @@ end up leaving point on a space or newline character."
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (seq-find 'find-theme '(srcery
+  (seq-find 'find-theme '(ample-flat
+                          srcery
                           dracula
                           noctilux
                           wombat
@@ -226,17 +224,17 @@ end up leaving point on a space or newline character."
               ("<tab>" . nil)
               ("TAB" . nil)
               ("<backtab>" . yas-expand)))
-(use-package yasnippet-snippets)
+;;(use-package yasnippet-snippets)
 
 
-(use-package auto-complete
-  :ensure t
-  :config
-  (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
-  (ac-config-default)
-  (ac-set-trigger-key "TAB")
-  (ac-set-trigger-key "<tab>")
-  (setq ac-auto-start nil))
+;; (use-package auto-complete
+;;   :ensure t
+;;   :config
+;;   (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
+;;   (ac-config-default)
+;;   (ac-set-trigger-key "TAB")
+;;   (ac-set-trigger-key "<tab>")
+;;   (setq ac-auto-start nil))
 
 
 (use-package paredit
@@ -329,6 +327,30 @@ end up leaving point on a space or newline character."
   :bind ("C-c C-p" . helm-browse-project))
 
 
+(use-package company
+  :ensure t
+  :bind (:map company-mode-map
+              ("C-TAB" . company-complete)
+              ("<C-tab>" . company-complete)))
+
+(use-package lsp-mode
+  :ensure t
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :config
+  (setq lsp-diagnostic-package :none)
+  :hook ((lsp-mode . lsp-enable-which-key-integration)
+         (go-mode . lsp-deferred)
+         ;; (go-mode . (lambda ()
+         ;;              (add-hook 'before-save-hook #'lsp-format-buffer t t)
+         ;;              (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+         )
+  :commands lsp)
+
+(use-package helm-lsp
+  :ensure t
+  :commands helm-lsp-workspace-symbol)
+
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
 
@@ -384,23 +406,19 @@ end up leaving point on a space or newline character."
         geiser-chicken-compile-geiser-p nil))
 
 
-;; (use-package ac-geiser
-;;   :onlyif (executable-find "chicken")
-;;   :hook geiser-mode)
-
-
 ;; GO-lang
+;; go get golang.org/x/tools/cmd/...
+;; go get golang.org/x/tools/gopls@latest
+;; ?go get github.com/rogpeppe/godef
 (use-package go-mode
-  :config
-  (setenv "GOPATH" "~/kod/go/")
-  (setenv "GOBIN" "~/kod/go/bin/")
-  (setenv "PATH" (concat (getenv "PATH") ":" (getenv "GOBIN")))
-  (setq exec-path (append exec-path (list (getenv "GOBIN"))))
-  (with-eval-after-load 'go-mode
-    (require 'go-autocomplete))
+  :onlyif (executable-find "go")
+  ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
+  ;;(add-hook 'before-save-hook 'gofmt-before-save)
   :bind (:map go-mode-map
               ("M-." . godef-jump)
-              ("C-c C-j" . nil)))
+              ;("C-c C-j" . nil)
+              )
+  )
 
 ;; Julia-lang
 ;; (use-package julia-mode
@@ -476,7 +494,6 @@ end up leaving point on a space or newline character."
   :config
   ;(matlab-cedet-setup)
   (setq matlab-indent-function-body t)
-  (auto-complete-mode 1)
   :bind (:map matlab-mode-map
               ("<C-return>" . matlab-shell-run-region-or-line)
               ("<C-enter>" . matlab-shell-run-region-or-line)
