@@ -1,5 +1,10 @@
 ;;; -*- lexical-binding: t; -*-
 
+(if (and (fboundp 'native-comp-available-p)
+       (native-comp-available-p))
+  (message "Native compilation is available")
+(message "Native complation is *not* available"))
+
 ;;; Set up package managing
 ;;(setq package-check-signature nil)
 (package-initialize)
@@ -53,7 +58,7 @@ end up leaving point on a space or newline character."
 (set-face-attribute 'variable-pitch
                     nil
                     :family "Inconsolata")
-(add-to-list 'default-frame-alist '(font . "Inconsolata-11"))
+(add-to-list 'default-frame-alist `(font . ,(pref-font)))
 
 (setq font-lock-maximum-decoration t)
 
@@ -82,7 +87,7 @@ end up leaving point on a space or newline character."
 (setq-default indent-tabs-mode nil
               transient-mark-mode t
               tab-width 4
-              truncate-lines 'nil
+              truncate-lines t
               truncate-partial-width-windows 'nil)
 
 ;; KEYBINDS
@@ -351,6 +356,19 @@ end up leaving point on a space or newline character."
   :ensure t
   :commands helm-lsp-workspace-symbol)
 
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  :bind (:map projectile-mode-map
+              ("C-c p" . projectile-command-map)))
+
+(use-package helm-projectile
+  :ensure t)
+
+(use-package yaml-mode
+  :ensure t)
+
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
 
@@ -412,13 +430,28 @@ end up leaving point on a space or newline character."
 ;; ?go get github.com/rogpeppe/godef
 (use-package go-mode
   :onlyif (executable-find "go")
+  :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
+  :config
+  (defun golang-clean-buffer ()
+    (interactive)
+    (progn
+      (save-some-buffers)
+      (lsp-organize-imports)
+      (lsp-format-buffer)
+      (save-buffer)))
+  (let ((go-type (assoc 'go projectile-project-types)))
+    (assq-delete-all 'go projectile-project-types)
+    (setq projectile-project-types
+          (cons go-type projectile-project-types)))
   :bind (:map go-mode-map
-              ("M-." . godef-jump)
-              ;("C-c C-j" . nil)
-              )
-  )
+              ("C-c l l" . golang-clean-buffer)
+              ("C-c l c" . recompile)
+              ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
+              ("<M-up>" . beginning-of-defun)
+              ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
+              ("M-p" . beginning-of-defun)))
 
 ;; Julia-lang
 ;; (use-package julia-mode
@@ -440,10 +473,10 @@ end up leaving point on a space or newline character."
 
 ;; Python-lang
 (defun python-hook ()
-  (setq python-shell-interpreter "ipython3"
+  (setq python-shell-interpreter "python3"
         python-indent 4)
-  (setq python-shell-interpreter-args "-c \"%load_ext autoreload\" --simple-prompt -i")
-  ;;(setq python-shell-interpreter-args "-i")
+  ;;(setq python-shell-interpreter-args "-c \"%load_ext autoreload\" --simple-prompt -")
+  (setq python-shell-interpreter-args "-i")
   (defun refresh ()
     (interactive)
     (save-some-buffers)
