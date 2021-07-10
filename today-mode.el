@@ -8,11 +8,11 @@
    (format-time-string "%Y-%m-%d")
    ".txt"))
 
-(defun today ()
-  (interactive)
-  (find-file (today-file))
-  (delete-other-windows)
-  (today-mode))
+;; (defun today ()
+;;   (interactive)
+;;   (find-file (today-file))
+;;   (delete-other-windows)
+;;   (today-mode))
 
 (define-derived-mode today-mode text-mode "today"
   "Major mode for writing about today."

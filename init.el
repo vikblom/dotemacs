@@ -1,4 +1,14 @@
 ;;; -*- lexical-binding: t; -*-
+;;
+;; Use GCC emacs
+;; https://akrl.sdf.org/gccemacs.html
+;; CC=gcc-10 ./configure --with-cairo --with-native-compilation
+;;
+;; Recompiling elisp faster?
+;; (setq comp-speed 3)
+;; (native-compile-async "~/.emacs.d/elpa/" 1 t)
+;; (native-compile-async "<path/to/system/elisp/files>" <n> t)
+;;
 
 (if (and (fboundp 'native-comp-available-p)
        (native-comp-available-p))
@@ -47,20 +57,22 @@ end up leaving point on a space or newline character."
 (require 'iso-transl)
 (prefer-coding-system 'utf-8)
 (global-font-lock-mode t)
+(setq font-lock-support-mode nil)
 
 (defun font-exist-p (font) (find-font (font-spec :name font)))
 
 (defun pref-font ()
-  (seq-find 'font-exist-p '("Roboto Mono-10"
-                            "Inconsolata-11"
-                            "DejaVu Sans Mono-10")))
+  (seq-find 'font-exist-p
+            '("Inconsolata-11"
+              "Roboto Mono-10"
+              "DejaVu Sans Mono-11"
+              )
+            nil))
 
-(set-face-attribute 'variable-pitch
-                    nil
-                    :family "Inconsolata")
-(add-to-list 'default-frame-alist `(font . ,(pref-font)))
-
-(setq font-lock-maximum-decoration t)
+(if (daemonp)
+    (add-hook 'after-make-frame-functions
+              (lambda (frame) (set-face-attribute 'default nil :font (pref-font))))
+  (set-face-attribute 'default nil :font (pref-font)))
 
 
 ;; BACKUP
@@ -76,7 +88,8 @@ end up leaving point on a space or newline character."
        (setq x-select-enable-clipboard t)
        (global-auto-revert-mode t)
        (setq auto-revert-remote-files t)
-       (setq split-width-threshold 140)
+       (setq split-height-threshold 100) ;; Impossibly tall
+       (setq split-width-threshold 160) ;; Two 80s
        (setq require-final-newline t)
        (setq bookmark-save-flag 1)
        (fset 'yes-or-no-p 'y-or-n-p)
@@ -136,7 +149,7 @@ end up leaving point on a space or newline character."
        (tool-bar-mode -1)
        (scroll-bar-mode -1)
        (menu-bar-mode -1)
-       (add-hook 'prog-mode-hook 'linum-mode)
+       ;;(add-hook 'prog-mode-hook 'linum-mode)
        (column-number-mode 1)
        (line-number-mode 1)
        (global-hl-line-mode 1)
@@ -179,7 +192,9 @@ end up leaving point on a space or newline character."
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (seq-find 'find-theme '(ample-flat
+  (seq-find 'find-theme '(doom-1337
+                          grayscale
+                          ample-flat
                           srcery
                           dracula
                           noctilux
@@ -218,7 +233,26 @@ end up leaving point on a space or newline character."
 (use-package magit
   :ensure t
   :config
-  (setq vc-handled-backends nil))
+  (setq vc-handled-backends nil
+        ediff-window-setup-function 'ediff-setup-windows-plain
+        ediff-diff-options "-w"
+        ediff-split-window-function 'split-window-horizontally)
+  (custom-set-faces
+   '(ediff-current-diff-A ((t (:inherit 'magit-diff-removed))))
+   '(ediff-current-diff-B ((t (:inherit 'magit-diff-added))))
+   '(ediff-current-diff-C ((t (:inherit 'magit-diff-none))))
+
+   '(ediff-fine-diff-A ((t (:inherit 'magit-diff-removed-highlight))))
+   '(ediff-fine-diff-B ((t (:inherit 'magit-diff-added-highlight))))
+   '(ediff-fine-diff-C ((t (:inherit 'magit-diff-none))))
+   )
+
+  ;; (setq face-new-frame-defaults
+  ;;       (cl-delete-if (lambda (face) (string-prefix-p "ediff" (symbol-name (car face))))
+  ;;                     face-new-frame-defaults))
+  )
+
+
 
 
 (use-package yasnippet
@@ -325,7 +359,18 @@ end up leaving point on a space or newline character."
   (setq helm-split-window-default-side 'below
         helm-M-x-fuzzy-match t
         helm-semantic-fuzzy-match t
-        helm-imenu-fuzzy-match t))
+        helm-imenu-fuzzy-match t)
+  (defun helm-skip-dots (old-func &rest args)
+    "Skip . and .. initially in helm-find-files.  First call OLD-FUNC with ARGS."
+    (apply old-func args)
+    (let ((sel (helm-get-selection)))
+      (if (and (stringp sel) (string-match "/\\.$" sel))
+          (helm-next-line 2)))
+    (let ((sel (helm-get-selection))) ; if we reached .. move back
+      (if (and (stringp sel) (string-match "/\\.\\.$" sel))
+          (helm-previous-line 1))))
+  (advice-add #'helm-preselect :around #'helm-skip-dots)
+  (advice-add #'helm-ff-move-to-first-real-candidate :around #'helm-skip-dots))
 
 
 (use-package helm-ls-git
@@ -343,9 +388,12 @@ end up leaving point on a space or newline character."
   :init
   (setq lsp-keymap-prefix "C-c l")
   :config
-  (setq lsp-diagnostic-package :none)
-  :hook ((lsp-mode . lsp-enable-which-key-integration)
+  (setq lsp-diagnostic-package :none
+        lsp-enable-on-type-formatting nil)
+  :hook (;(lsp-mode . lsp-enable-which-key-integration)
          (go-mode . lsp-deferred)
+         (c-mode . lsp-deferred)
+         (c++-mode . lsp-deferred)
          ;; (go-mode . (lambda ()
          ;;              (add-hook 'before-save-hook #'lsp-format-buffer t t)
          ;;              (add-hook 'before-save-hook #'lsp-organize-imports t t)))
@@ -398,6 +446,13 @@ end up leaving point on a space or newline character."
   :onlyif (executable-find "ctags")
   :bind (:map c-mode-map ("<f5>" . ctags-update)))
 
+;; C++-lang
+(use-package modern-cpp-font-lock
+  :ensure t)
+(use-package cmake-mode
+  :config
+  (setq cmake-tab-width 4))
+
 
 (defun create-etags (dir-name)
   "Create tags file."
@@ -414,6 +469,7 @@ end up leaving point on a space or newline character."
   (setq clang-format-style "{BasedOnStyle: WebKit, PointerAlignment: Right}")
   ;:bind (:map c-mode-map ("C-c f" . clang-format-buffer))
   )
+
 
 
 ;; Scheme-lang
