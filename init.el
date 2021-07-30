@@ -33,6 +33,13 @@
 (autoload 'zap-up-to-char "misc"
   "Kill up to, but not including ARGth occurrence of CHAR." t)
 
+(use-package exec-path-from-shell
+  :onlyif (daemonp)
+  :ensure t
+  :config
+  (setq exec-path-from-shell-name "/usr/bin/bash")
+  (exec-path-from-shell-initialize))
+
 (defun double-indent ()
   (interactive)
   (replace-regexp "^\\( +\\)" "\\1\\1" nil (mark) (point)))
@@ -207,6 +214,15 @@ end up leaving point on a space or newline character."
                              (select-frame frame)
                              (load-theme (pref-theme) t))))
       ((window-system) (load-theme (pref-theme) t)))
+
+;; (if (eq (pref-theme) 'doom-1337)
+;;     (set-face-attribute 'highlight
+;;                         nil
+;;                         :background "gray40"))
+
+;; (custom-theme-set-faces 'doom-1337
+;;                         '(highlight ((t (:background "gray40"))))
+;;                         )
 
 ;; Global packages
 (use-package org
