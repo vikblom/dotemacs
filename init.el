@@ -60,6 +60,26 @@ end up leaving point on a space or newline character."
     ;; now point is after the match, let's go back one column.
     (forward-char -1)))
 
+(defun org-src-region ()
+  "Wrap marked region in a org SRC block."
+  (interactive)
+  (let ((lang (read-from-minibuffer "language: ")))
+    (save-excursion
+      (goto-char (region-beginning))
+      (if (not (eq (point) (line-beginning-position)))
+          (newline))
+      (insert (concat "#+BEGIN_SRC " lang))
+      (if (not (eq (point) (line-end-position)))
+          (newline)))
+    (save-excursion
+      (if (not (eq (point) (line-beginning-position)))
+          (newline))
+      (goto-char (region-end))
+      (insert "#+END_SRC")
+      (if (not (eq (point) (line-end-position)))
+          (newline)))))
+
+
 ;; FONT
 (require 'iso-transl)
 (prefer-coding-system 'utf-8)
@@ -215,10 +235,10 @@ end up leaving point on a space or newline character."
                              (load-theme (pref-theme) t))))
       ((window-system) (load-theme (pref-theme) t)))
 
-;; (if (eq (pref-theme) 'doom-1337)
-;;     (set-face-attribute 'highlight
-;;                         nil
-;;                         :background "gray40"))
+(if (eq (pref-theme) 'doom-1337)
+    (set-face-attribute 'highlight
+                        nil
+                        :background "gray40"))
 
 ;; (custom-theme-set-faces 'doom-1337
 ;;                         '(highlight ((t (:background "gray40"))))
@@ -408,8 +428,8 @@ end up leaving point on a space or newline character."
         lsp-enable-on-type-formatting nil)
   :hook (;(lsp-mode . lsp-enable-which-key-integration)
          (go-mode . lsp-deferred)
-         (c-mode . lsp-deferred)
-         (c++-mode . lsp-deferred)
+         ;;(c-mode . lsp-deferred)
+         ;;(c++-mode . lsp-deferred)
          ;; (go-mode . (lambda ()
          ;;              (add-hook 'before-save-hook #'lsp-format-buffer t t)
          ;;              (add-hook 'before-save-hook #'lsp-organize-imports t t)))
