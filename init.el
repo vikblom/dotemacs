@@ -245,11 +245,14 @@ end up leaving point on a space or newline character."
 ;;                         )
 
 ;; Global packages
+;; http://notesyoujustmightwanttosave.blogspot.com/2011/12/org-speed-keys.html
 (use-package org
   :config
   (define-key global-map (kbd "C-c l") 'org-store-link)
   (define-key global-map (kbd "C-c a") 'org-agenda)
-  (setq org-agenda-files (list "~/org")
+  (setq org-use-speed-commands 't
+        org-agenda-files (list "~/org")
+        org-blank-before-new-entry '((heading . t) (plain-list-item . auto))
         org-cycle-separator-lines 1
         org-startup-folded nil
         org-log-done nil))
@@ -430,9 +433,9 @@ end up leaving point on a space or newline character."
          (go-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
          ;;(c++-mode . lsp-deferred)
-         ;; (go-mode . (lambda ()
-         ;;              (add-hook 'before-save-hook #'lsp-format-buffer t t)
-         ;;              (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+         (go-mode . (lambda ()
+                      (add-hook 'before-save-hook #'lsp-format-buffer t t)
+                      (add-hook 'before-save-hook #'lsp-organize-imports t t)))
          )
   :commands lsp)
 
