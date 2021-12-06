@@ -37,7 +37,7 @@
   :onlyif (daemonp)
   :ensure t
   :config
-  (setq exec-path-from-shell-name "/usr/bin/bash")
+  ;(setq exec-path-from-shell-name "/usr/bin/bash")
   (exec-path-from-shell-initialize))
 
 (defun double-indent ()
@@ -89,17 +89,17 @@ end up leaving point on a space or newline character."
 (defun font-exist-p (font) (find-font (font-spec :name font)))
 
 (defun pref-font ()
-  (seq-find 'font-exist-p
-            '("Inconsolata-11"
-              "Roboto Mono-10"
-              "DejaVu Sans Mono-11"
-              )
-            nil))
+  (if (window-system)
+      (let ((font (seq-find 'font-exist-p '("Inconsolata-11"
+                                             "Roboto Mono-10"
+                                             "DejaVu Sans Mono-11"
+                                             ) nil)))
+        (set-face-attribute 'default nil :font font))))
 
 (if (daemonp)
     (add-hook 'after-make-frame-functions
-              (lambda (frame) (set-face-attribute 'default nil :font (pref-font))))
-  (set-face-attribute 'default nil :font (pref-font)))
+              (lambda (frame) (pref-font)))
+  (pref-font))
 
 
 ;; BACKUP
@@ -140,7 +140,6 @@ end up leaving point on a space or newline character."
        (global-set-key (kbd "C-M-r") 'isearch-backward)
 
        (global-set-key (kbd "C-z") 'pop-to-mark-command)
-
 
        (global-set-key (kbd "C-<next>") (lambda ()
                                           (interactive)
@@ -219,21 +218,28 @@ end up leaving point on a space or newline character."
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (seq-find 'find-theme '(doom-1337
-                          grayscale
-                          ample-flat
-                          srcery
-                          dracula
-                          noctilux
-                          wombat
-                          gruber-darker)))
+  (if (window-system)
+      (seq-find 'find-theme '(doom-nord
+                              doom-tomorrow-night ; blueish muted colors
+                              doom-1337 ; dark brighter text
+                              doom-opera ; grey
+                              doom-ayu-mirage ; navy contrast yellows
+                              doom-plain-dark
+                              ample-flat ; brownish muted colors
+                              srcery
+                              doom-wilmersdorf ; gentoo chill
+                              dracula ; gentoo no chill
+                              noctilux
+                              wombat
+                              gruber-darker))
+    'doom-plain-dark))
 
 (cond ((not (pref-theme))) ;; Do nothing
       ((daemonp) (add-hook 'after-make-frame-functions
                            (lambda (frame)
                              (select-frame frame)
                              (load-theme (pref-theme) t))))
-      ((window-system) (load-theme (pref-theme) t)))
+      (t (load-theme (pref-theme) t)))
 
 (if (eq (pref-theme) 'doom-1337)
     (set-face-attribute 'highlight
@@ -422,13 +428,22 @@ end up leaving point on a space or newline character."
               ("C-TAB" . company-complete)
               ("<C-tab>" . company-complete)))
 
+;; Integrates with LSP
+;; Leading bind C-c ! ...
+(use-package flycheck
+  :ensure t)
+
 (use-package lsp-mode
   :ensure t
   :init
   (setq lsp-keymap-prefix "C-c l")
   :config
-  (setq lsp-diagnostic-package :none
-        lsp-enable-on-type-formatting nil)
+  ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+  (setq ;lsp-diagnostic-package :none
+        ;lsp-enable-on-type-formatting nil
+        lsp-lens-enable nil
+        lsp-ui-sideline-enable nil
+        lsp-headerline-breadcrumb-enable nil)
   :hook (;(lsp-mode . lsp-enable-which-key-integration)
          (go-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
@@ -540,6 +555,8 @@ end up leaving point on a space or newline character."
     (assq-delete-all 'go projectile-project-types)
     (setq projectile-project-types
           (cons go-type projectile-project-types)))
+  (add-hook 'go-mode-hook
+            (lambda () (setq-local compile-command "go test")))
   :bind (:map go-mode-map
               ("C-c l l" . golang-clean-buffer)
               ("C-c l c" . recompile)
