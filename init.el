@@ -2,6 +2,7 @@
 ;;
 ;; Use GCC emacs
 ;; https://akrl.sdf.org/gccemacs.html
+;; https://www.emacswiki.org/emacs/GccEmacs
 ;; CC=gcc-10 ./configure --with-cairo --with-native-compilation
 ;;
 ;; Recompiling elisp faster?
@@ -37,7 +38,7 @@
   :onlyif (daemonp)
   :ensure t
   :config
-  ;(setq exec-path-from-shell-name "/usr/bin/bash")
+  (setq exec-path-from-shell-name "/usr/bin/fish")
   (exec-path-from-shell-initialize))
 
 (defun double-indent ()
@@ -376,15 +377,15 @@ end up leaving point on a space or newline character."
   (add-hook 'prog-mode-hook 'whitespace-mode))
 
 
-(use-package windmove
-  :ensure t
-  :config
-  (windmove-default-keybindings 'super)
-  (setq windmove-wrap-around t)
-  :bind (("s-h" . windmove-left)
-         ("s-j" . windmove-down)
-         ("s-k" . windmove-up)
-         ("s-l" . windmove-right)))
+;; (use-package windmove
+;;   :ensure t
+;;   :config
+;;   (windmove-default-keybindings 'super)
+;;   (setq windmove-wrap-around t)
+;;   :bind (("s-h" . windmove-left)
+;;          ("s-j" . windmove-down)
+;;          ("s-k" . windmove-up)
+;;          ("s-l" . windmove-right)))
 
 
 ;; HELM
@@ -439,11 +440,13 @@ end up leaving point on a space or newline character."
   (setq lsp-keymap-prefix "C-c l")
   :config
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
-  (setq ;lsp-diagnostic-package :none
-        ;lsp-enable-on-type-formatting nil
-        lsp-lens-enable nil
-        lsp-ui-sideline-enable nil
-        lsp-headerline-breadcrumb-enable nil)
+  (setq
+   ;;lsp-diagnostic-package :none
+   ;;lsp-enable-on-type-formatting nil
+   ;;lsp-signature-render-documentation ; Eldoc
+   lsp-lens-enable nil
+   lsp-ui-sideline-enable nil
+   lsp-headerline-breadcrumb-enable nil)
   :hook (;(lsp-mode . lsp-enable-which-key-integration)
          (go-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
@@ -462,6 +465,7 @@ end up leaving point on a space or newline character."
   :ensure t
   :init
   (projectile-mode +1)
+  (setq projectile-switch-project-action #'projectile-commander)
   :bind (:map projectile-mode-map
               ("C-c p" . projectile-command-map)))
 
@@ -515,6 +519,13 @@ end up leaving point on a space or newline character."
     (eshell-command
      (format "find %s -type f -name \"*.[ch]\" | etags -" dir-name))
     (visit-tags-table (concat dir-name "TAGS"))))
+
+(defun lsp-go-tags ()
+  "Set tags for LSP Go"
+  (interactive)
+  ;; FIXME: Loop through the variable and replace earlier -tags.
+  (let ((tags (read-from-minibuffer "-tags=")))
+    (setq lsp-go-build-flags (vector (s-join "" (list "-tags=" tags))))))
 
 (use-package clang-format
   :onlyif (executable-find "clang-format")
