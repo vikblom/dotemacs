@@ -112,6 +112,7 @@ end up leaving point on a space or newline character."
 
 ;; BEHAVIOUR
 (progn (add-hook 'before-save-hook 'delete-trailing-whitespace)
+       (setq compilation-scroll-output t)
        (delete-selection-mode t)
        (setq x-select-enable-clipboard t)
        (global-auto-revert-mode t)
@@ -432,7 +433,10 @@ end up leaving point on a space or newline character."
 ;; Integrates with LSP
 ;; Leading bind C-c ! ...
 (use-package flycheck
-  :ensure t)
+  :ensure t
+  :config
+  (setq flycheck-keymap-prefix
+        (define-key flycheck-mode-map (kbd "C-c f") flycheck-command-map)))
 
 (use-package lsp-mode
   :ensure t
@@ -570,7 +574,7 @@ end up leaving point on a space or newline character."
             (lambda () (setq-local compile-command "go test")))
   :bind (:map go-mode-map
               ("C-c l l" . golang-clean-buffer)
-              ("C-c l c" . recompile)
+              ("C-c C-c" . recompile)
               ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
