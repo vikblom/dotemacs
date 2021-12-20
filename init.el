@@ -94,12 +94,14 @@ end up leaving point on a space or newline character."
       (let ((font (seq-find 'font-exist-p '("Inconsolata-11"
                                              "Roboto Mono-10"
                                              "DejaVu Sans Mono-11"
-                                             ) nil)))
+                                             ))))
         (set-face-attribute 'default nil :font font))))
 
 (if (daemonp)
-    (add-hook 'after-make-frame-functions
-              (lambda (frame) (pref-font)))
+    (progn
+      (add-hook 'after-make-frame-functions
+                (lambda (frame) (pref-font)))
+      (add-hook 'server-switch-hook #'raise-frame))
   (pref-font))
 
 
@@ -149,8 +151,8 @@ end up leaving point on a space or newline character."
        (global-set-key (kbd "C-<prior>") (lambda ()
                                            (interactive)
                                            (other-window -1)))
-       (global-set-key (kbd "M-[") 'previous-multiframe-window)
-       (global-set-key (kbd "M-]") 'next-multiframe-window)
+       (global-set-key (kbd "C-M-o") 'previous-multiframe-window)
+       (global-set-key (kbd "M-o") 'next-multiframe-window)
        ;;(global-set-key (kbd "M-[") 'previous-buffer)
        ;;(global-set-key (kbd "M-]") 'next-buffer)
 
@@ -220,21 +222,20 @@ end up leaving point on a space or newline character."
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (if (window-system)
-      (seq-find 'find-theme '(doom-nord
-                              doom-tomorrow-night ; blueish muted colors
-                              doom-1337 ; dark brighter text
-                              doom-opera ; grey
-                              doom-ayu-mirage ; navy contrast yellows
-                              doom-plain-dark
-                              ample-flat ; brownish muted colors
-                              srcery
-                              doom-wilmersdorf ; gentoo chill
-                              dracula ; gentoo no chill
-                              noctilux
-                              wombat
-                              gruber-darker))
-    'doom-plain-dark))
+  (seq-find 'find-theme '(doom-nord
+                          doom-tomorrow-night ; blueish muted colors
+                          doom-1337 ; dark brighter text
+                          doom-opera ; grey
+                          doom-ayu-mirage ; navy contrast yellows
+                          doom-plain-dark
+                          ample-flat ; brownish muted colors
+                          srcery
+                          doom-wilmersdorf ; gentoo chill
+                          dracula ; gentoo no chill
+                          noctilux
+                          wombat
+                          gruber-darker))
+   )
 
 (cond ((not (pref-theme))) ;; Do nothing
       ((daemonp) (add-hook 'after-make-frame-functions
@@ -243,10 +244,10 @@ end up leaving point on a space or newline character."
                              (load-theme (pref-theme) t))))
       (t (load-theme (pref-theme) t)))
 
-(if (eq (pref-theme) 'doom-1337)
-    (set-face-attribute 'highlight
-                        nil
-                        :background "gray40"))
+;; (if (eq (pref-theme) 'doom-1337)
+;;     (set-face-attribute 'highlight
+;;                         nil
+;;                         :background "gray40"))
 
 ;; (custom-theme-set-faces 'doom-1337
 ;;                         '(highlight ((t (:background "gray40"))))
@@ -336,8 +337,8 @@ end up leaving point on a space or newline character."
           geiser-repl-mode)
          . paredit-mode)
   :bind (:map paredit-mode-map
-              ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
-              ("<M-up>" . beginning-of-defun)
+              ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
+              ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
 
@@ -485,8 +486,8 @@ end up leaving point on a space or newline character."
 ;; C-lang
 (use-package cc-mode
   :bind (:map c-mode-map
-              ("<M-up>" . c-beginning-of-defun)
-              ("<M-down>" . (lambda () (interactive) (c-beginning-of-defun -1)))
+              ;; ("<M-up>" . c-beginning-of-defun)
+              ;; ("<M-down>" . (lambda () (interactive) (c-beginning-of-defun -1)))
               ("M-p" . c-beginning-of-defun)
               ("M-n" . (lambda () (interactive) (c-beginning-of-defun -1)))
               ("C-c RET" . (lambda () (interactive) (compile "make -C .."))))
@@ -575,8 +576,8 @@ end up leaving point on a space or newline character."
   :bind (:map go-mode-map
               ("C-c l l" . golang-clean-buffer)
               ("C-c C-c" . recompile)
-              ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
-              ("<M-up>" . beginning-of-defun)
+              ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
+              ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
 
@@ -613,14 +614,14 @@ end up leaving point on a space or newline character."
   (local-set-key (kbd "<C-return>") 'python-shell-send-region)
   (local-set-key (kbd "<C-enter>") 'python-shell-send-region)
   (local-set-key (kbd "<f5>") 'refresh)
-  (local-set-key (kbd "<M-up>")
-                 (lambda () (interactive)
-                   (python-nav-backward-defun)
-                   (recenter 10)))
-  (local-set-key (kbd "<M-down>")
-                 (lambda () (interactive)
-                   (python-nav-forward-defun)
-                   (recenter 10)))
+  ;; (local-set-key (kbd "<M-up>")
+  ;;                (lambda () (interactive)
+  ;;                  (python-nav-backward-defun)
+  ;;                  (recenter 10)))
+  ;; (local-set-key (kbd "<M-down>")
+  ;;                (lambda () (interactive)
+  ;;                  (python-nav-forward-defun)
+  ;;                  (recenter 10)))
   (setq-default py-split-windows-on-execute-function 'split-window-vertically)
   (define-key python-mode-map (kbd "C-c C-p") nil))
 
@@ -658,8 +659,8 @@ end up leaving point on a space or newline character."
               ("<C-return>" . matlab-shell-run-region-or-line)
               ("<C-enter>" . matlab-shell-run-region-or-line)
               ("C-c C-m" . matlab-shell)
-              ("<M-down>" . matlab-end-of-defun)
-              ("<M-up>" . matlab-beginning-of-defun)
+              ;; ("<M-down>" . matlab-end-of-defun)
+              ;; ("<M-up>" . matlab-beginning-of-defun)
               ("M-n" . matlab-end-of-defun)
               ("M-p" . matlab-beginning-of-defun)))
 
