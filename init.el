@@ -572,9 +572,13 @@ end up leaving point on a space or newline character."
     (setq projectile-project-types
           (cons go-type projectile-project-types)))
   (add-hook 'go-mode-hook
-            (lambda () (setq-local compile-command "go test")))
+            (lambda ()
+              (setq-local compile-command "go test")
+              ;;(setq-local compilation-read-command nil)
+              ))
   :bind (:map go-mode-map
               ("C-c l l" . golang-clean-buffer)
+              ("C-c l c" . compile)
               ("C-c C-c" . recompile)
               ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ;; ("<M-up>" . beginning-of-defun)
