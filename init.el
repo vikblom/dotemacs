@@ -222,7 +222,8 @@ end up leaving point on a space or newline character."
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (seq-find 'find-theme '(doom-nord
+  (seq-find 'find-theme '(doom-wilmersdorf ; gentoo chill
+                          doom-nord
                           doom-tomorrow-night ; blueish muted colors
                           doom-1337 ; dark brighter text
                           doom-opera ; grey
@@ -230,7 +231,6 @@ end up leaving point on a space or newline character."
                           doom-plain-dark
                           ample-flat ; brownish muted colors
                           srcery
-                          doom-wilmersdorf ; gentoo chill
                           dracula ; gentoo no chill
                           noctilux
                           wombat
@@ -300,7 +300,19 @@ end up leaving point on a space or newline character."
   ;;                     face-new-frame-defaults))
   )
 
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1))
 
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
 
 
 (use-package yasnippet
