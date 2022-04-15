@@ -348,6 +348,8 @@ M-x compile.
   :init
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
   (setq evil-want-keybinding nil)
+  (setq evil-want-minibuffer t)
+  (setq evil-undo-system 'undo-redo)
   :config
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo))
@@ -643,6 +645,10 @@ M-x compile.
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
 
+(use-package feature-mode
+  :config
+  (setq feature-indent-level 4))
+
 ;; Julia-lang
 ;; (use-package julia-mode
 ;;   :onlyif (executable-find "julia")
@@ -688,6 +694,7 @@ M-x compile.
   (define-key python-mode-map (kbd "C-c C-p") nil))
 
 (add-hook 'python-mode-hook 'python-hook)
+
 
 
 ;; R-lang
