@@ -16,6 +16,8 @@
   (message "Native compilation is available")
 (message "Native complation is *not* available"))
 
+(setq warning-minimum-level :error)
+
 ;;; Set up package managing
 ;;(setq package-check-signature nil)
 (package-initialize)
@@ -280,7 +282,7 @@ M-x compile.
       ((daemonp) (add-hook 'after-make-frame-functions
                            (lambda (frame)
                              (select-frame frame)
-                             (load-theme (pref-theme) t))))
+                             (load-theme 'srcery t))))
       (t (load-theme (pref-theme) t)))
 
 ;; (if (eq (pref-theme) 'doom-1337)
@@ -325,6 +327,7 @@ M-x compile.
   :ensure t
   :config
   (setq vc-handled-backends nil
+        magit-log-section-commit-count 20
         ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-diff-options "-w"
         ediff-split-window-function 'split-window-horizontally)
@@ -346,13 +349,14 @@ M-x compile.
 (use-package evil
   :ensure t
   :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-  (setq evil-want-keybinding nil)
-  (setq evil-want-minibuffer t)
-  (setq evil-undo-system 'undo-redo)
+  (setq evil-want-integration t ;; This is optional since it's already set to t by default.
+        evil-want-keybinding nil
+        evil-want-minibuffer t)
   :config
   (evil-mode 1)
-  (evil-set-undo-system 'undo-redo))
+  (evil-set-undo-system 'undo-redo)
+  ;; Emacs in terminal cannot tell <tab> from TAB (which is the same as C-i).
+  (define-key evil-motion-state-map (kbd "TAB") nil))
 
 (use-package evil-collection
   :after evil
@@ -644,10 +648,6 @@ M-x compile.
               ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
-
-(use-package feature-mode
-  :config
-  (setq feature-indent-level 4))
 
 ;; Julia-lang
 ;; (use-package julia-mode
