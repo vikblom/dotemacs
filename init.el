@@ -132,10 +132,10 @@ M-x compile.
 
 (defun pref-font ()
   (if (window-system)
-      (let ((font (seq-find 'font-exist-p '("Roboto Mono-10"
-                                            "Inconsolata-11"
-                                             "DejaVu Sans Mono-11"
-                                             ))))
+      (let ((font (seq-find 'font-exist-p '("Inconsolata-11"
+                                            "Roboto Mono-10"
+                                            "DejaVu Sans Mono-11"
+                                            ))))
         (set-face-attribute 'default nil :font font))))
 
 (if (daemonp)
@@ -235,7 +235,7 @@ M-x compile.
 
 
 ;; Stack Overflow header for each open buffer
-(load "~/.emacs.d/header.el")
+;; (load "~/.emacs.d/header.el")
 
 
 ;; Theme setup
@@ -351,7 +351,8 @@ M-x compile.
   :init
   (setq evil-want-integration t ;; This is optional since it's already set to t by default.
         evil-want-keybinding nil
-        evil-want-minibuffer t)
+        ;; evil-want-minibuffer t
+        )
   :config
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
@@ -503,27 +504,45 @@ M-x compile.
 
 (use-package lsp-mode
   :ensure t
+  :commands lsp
   :init
   (setq lsp-keymap-prefix "C-c l")
   :config
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
   (setq
+   lsp-eldoc-enable-hover nil
+   lsp-modeline-diagnostics-enable nil
+   lsp-signature-auto-activate nil
+   lsp-signature-render-documentation nil
    ;;lsp-diagnostic-package :none
    ;;lsp-enable-on-type-formatting nil
-   ;;lsp-signature-render-documentation ; Eldoc
+   lsp-signature-render-documentation nil
    lsp-lens-enable nil
-   lsp-ui-sideline-enable nil
-   lsp-headerline-breadcrumb-enable nil)
-  :hook (;(lsp-mode . lsp-enable-which-key-integration)
-         (go-mode . lsp-deferred)
+   lsp-headerline-breadcrumb-enable t
+   lsp-headerline-breadcrumb-enable-diagnostics nil)
+  :hook ((go-mode . lsp-deferred)
          (clojure-mode . lsp-deferred)
+         (rust-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
          ;;(c++-mode . lsp-deferred)
-         (go-mode . (lambda ()
+         (lsp-mode . (lambda ()
                       (add-hook 'before-save-hook #'lsp-format-buffer t t)
                       (add-hook 'before-save-hook #'lsp-organize-imports t t)))
          )
-  :commands lsp)
+  )
+
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode
+  :custom
+  (lsp-ui-peek-always-show t)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-position 'at-point)
+  (setq lsp-ui-doc-max-width 150
+        lsp-ui-doc-max-height 25)
+  :bind (:map lsp-ui-doc-mode-map ("C-c i" . lsp-ui-doc-focus-frame))
+  )
 
 (use-package helm-lsp
   :ensure t
@@ -631,10 +650,6 @@ M-x compile.
       (lsp-organize-imports)
       (lsp-format-buffer)
       (save-buffer)))
-  (let ((go-type (assoc 'go projectile-project-types)))
-    (assq-delete-all 'go projectile-project-types)
-    (setq projectile-project-types
-          (cons go-type projectile-project-types)))
   (add-hook 'go-mode-hook
             (lambda ()
               (setq-local compile-command "go test")
@@ -648,6 +663,14 @@ M-x compile.
               ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
+
+;; Rust
+;; rustup component add rust-src
+;; https://robert.kra.hn/posts/2021-02-07_rust-with-emacs
+(use-package rust-mode
+  :onlyif (executable-find "rustc")
+  :ensure t
+  )
 
 ;; Julia-lang
 ;; (use-package julia-mode
