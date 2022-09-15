@@ -80,6 +80,45 @@ end up leaving point on a space or newline character."
       (if (not (eq (point) (line-end-position)))
           (newline)))))
 
+;; (setq compilation-last-buffer nil)
+(defun compile-again (pfx)
+  """Run the same compile as the last time.
+
+If there was no last time, or there is a prefix argument, this acts like
+M-x compile.
+"""
+ (interactive "p")
+ (if (and (eq pfx 1)
+	  compilation-last-buffer)
+     (progn
+       (set-buffer compilation-last-buffer)
+       (revert-buffer t t))
+   (call-interactively 'compile)))
+
+(defun uuid-create ()
+  "Return a newly generated UUID. This uses a simple hashing of variable data."
+  (let ((s (md5 (format "%s%s%s%s%s%s%s%s%s%s"
+                        (user-uid)
+                        (emacs-pid)
+                        (system-name)
+                        (user-full-name)
+                        user-mail-address
+                        (current-time)
+                        (emacs-uptime)
+                        (garbage-collect)
+                        (random)
+                        (recent-keys)))))
+    (format "%s-%s-3%s-%s-%s"
+            (substring s 0 8)
+            (substring s 8 12)
+            (substring s 13 16)
+            (substring s 16 20)
+            (substring s 20 32))))
+
+(defun uuid-insert ()
+  "Inserts a new UUID at the point."
+  (interactive)
+  (insert (uuid-create)))
 
 ;; FONT
 (require 'iso-transl)
@@ -91,8 +130,8 @@ end up leaving point on a space or newline character."
 
 (defun pref-font ()
   (if (window-system)
-      (let ((font (seq-find 'font-exist-p '("Inconsolata-11"
-                                             "Roboto Mono-10"
+      (let ((font (seq-find 'font-exist-p '("Roboto Mono-10"
+                                            "Inconsolata-11"
                                              "DejaVu Sans Mono-11"
                                              ))))
         (set-face-attribute 'default nil :font font))))
@@ -222,8 +261,8 @@ end up leaving point on a space or newline character."
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (seq-find 'find-theme '(doom-wilmersdorf ; gentoo chill
-                          doom-nord
+  (seq-find 'find-theme '(doom-nord
+                          doom-wilmersdorf ; gentoo chill
                           doom-tomorrow-night ; blueish muted colors
                           doom-1337 ; dark brighter text
                           doom-opera ; grey
@@ -254,6 +293,9 @@ end up leaving point on a space or newline character."
 ;;                         )
 
 ;; Global packages
+
+(setq winner-mode 't)
+
 ;; http://notesyoujustmightwanttosave.blogspot.com/2011/12/org-speed-keys.html
 (use-package org
   :config
@@ -264,6 +306,7 @@ end up leaving point on a space or newline character."
         org-blank-before-new-entry '((heading . t) (plain-list-item . auto))
         org-cycle-separator-lines 1
         org-startup-folded nil
+        org-startup-indented 't
         org-log-done nil))
 
 
@@ -306,7 +349,8 @@ end up leaving point on a space or newline character."
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
   (setq evil-want-keybinding nil)
   :config
-  (evil-mode 1))
+  (evil-mode 1)
+  (evil-set-undo-system 'undo-redo))
 
 (use-package evil-collection
   :after evil
@@ -466,6 +510,7 @@ end up leaving point on a space or newline character."
    lsp-headerline-breadcrumb-enable nil)
   :hook (;(lsp-mode . lsp-enable-which-key-integration)
          (go-mode . lsp-deferred)
+         (clojure-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
          ;;(c++-mode . lsp-deferred)
          (go-mode . (lambda ()
@@ -479,6 +524,7 @@ end up leaving point on a space or newline character."
   :commands helm-lsp-workspace-symbol)
 
 (use-package projectile
+  ;; https://github.com/bbatsov/projectile/issues/1777
   :ensure t
   :init
   (projectile-mode +1)
@@ -591,7 +637,7 @@ end up leaving point on a space or newline character."
   :bind (:map go-mode-map
               ("C-c l l" . golang-clean-buffer)
               ("C-c l c" . compile)
-              ("C-c C-c" . recompile)
+              ("C-c C-c" . compile-again)
               ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
