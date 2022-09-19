@@ -510,7 +510,7 @@ M-x compile.
   :config
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
   (setq
-   lsp-eldoc-enable-hover nil
+   lsp-eldoc-enable-hover t
    lsp-modeline-diagnostics-enable nil
    lsp-signature-auto-activate nil
    lsp-signature-render-documentation nil
@@ -536,13 +536,14 @@ M-x compile.
   :commands lsp-ui-mode
   :custom
   (lsp-ui-peek-always-show t)
-  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-enable t)
   (lsp-ui-doc-enable t)
   (lsp-ui-doc-position 'at-point)
   (setq lsp-ui-doc-max-width 150
         lsp-ui-doc-max-height 25)
-  :bind (:map lsp-ui-doc-mode-map ("C-c i" . lsp-ui-doc-focus-frame))
-  )
+  :config
+  (setq lsp-ui-doc-show-with-mouse nil)
+  :bind (:map lsp-ui-doc-mode-map ("C-c i" . lsp-ui-doc-focus-frame)))
 
 (use-package helm-lsp
   :ensure t
@@ -667,6 +668,8 @@ M-x compile.
 ;; Rust
 ;; rustup component add rust-src
 ;; https://robert.kra.hn/posts/2021-02-07_rust-with-emacs
+;; git clone https://github.com/rust-lang/rust-analyzer.git && cd rust-analyzer
+;; cargo xtask install --server
 (use-package rust-mode
   :onlyif (executable-find "rustc")
   :ensure t
