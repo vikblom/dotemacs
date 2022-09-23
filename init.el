@@ -132,8 +132,8 @@ M-x compile.
 
 (defun pref-font ()
   (if (window-system)
-      (let ((font (seq-find 'font-exist-p '("Inconsolata-11"
-                                            "Roboto Mono-10"
+      (let ((font (seq-find 'font-exist-p '("Roboto Mono-10"
+                                            "Inconsolata-11"
                                             "DejaVu Sans Mono-11"
                                             ))))
         (set-face-attribute 'default nil :font font))))
@@ -326,6 +326,7 @@ M-x compile.
 (use-package magit
   :ensure t
   :config
+  (add-hook 'after-save-hook 'magit-after-save-refresh-status)
   (setq vc-handled-backends nil
         magit-log-section-commit-count 20
         ediff-window-setup-function 'ediff-setup-windows-plain
@@ -519,7 +520,9 @@ M-x compile.
    lsp-signature-render-documentation nil
    lsp-lens-enable nil
    lsp-headerline-breadcrumb-enable t
-   lsp-headerline-breadcrumb-enable-diagnostics nil)
+   lsp-headerline-breadcrumb-icons-enable nil
+   lsp-headerline-breadcrumb-enable-diagnostics nil
+   )
   :hook ((go-mode . lsp-deferred)
          (clojure-mode . lsp-deferred)
          (rust-mode . lsp-deferred)
@@ -673,7 +676,10 @@ M-x compile.
 (use-package rust-mode
   :onlyif (executable-find "rustc")
   :ensure t
-  )
+  :bind (:map rust-mode-map
+              ("C-c C-c" . compile-again)
+              ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
+              ("M-p" . beginning-of-defun)))
 
 ;; Julia-lang
 ;; (use-package julia-mode
