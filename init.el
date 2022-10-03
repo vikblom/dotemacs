@@ -96,6 +96,13 @@ M-x compile.
        (set-buffer compilation-last-buffer)
        (revert-buffer t t))
    (call-interactively 'compile)))
+;; color compilation buffer
+(ignore-errors
+  (require 'ansi-color)
+  (defun my-colorize-compilation-buffer ()
+    (when (eq major-mode 'compilation-mode)
+      (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
 
 (defun uuid-create ()
   "Return a newly generated UUID. This uses a simple hashing of variable data."
@@ -166,7 +173,8 @@ M-x compile.
        (setq bookmark-save-flag 1)
        (fset 'yes-or-no-p 'y-or-n-p)
        (put 'upcase-region 'disabled nil)
-       (put 'downcase-region 'disabled nil))
+       (put 'downcase-region 'disabled nil)
+       (electric-pair-mode 1))
 
 ;; INDENTATION
 (setq-default indent-tabs-mode nil
