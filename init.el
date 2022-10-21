@@ -37,7 +37,7 @@
   "Kill up to, but not including ARGth occurrence of CHAR." t)
 
 (use-package exec-path-from-shell
-  :onlyif (daemonp)
+  ;; :onlyif (daemonp)
   :ensure t
   :config
   (setq exec-path-from-shell-name "/usr/bin/fish")
@@ -229,6 +229,7 @@ M-x compile.
        (scroll-bar-mode -1)
        (menu-bar-mode -1)
        ;;(add-hook 'prog-mode-hook 'linum-mode)
+       (setq use-dialog-box nil)
        (column-number-mode 1)
        (line-number-mode 1)
        (global-hl-line-mode 1)
@@ -271,14 +272,17 @@ M-x compile.
    (custom-theme--load-path)))
 
 (defun pref-theme ()
-  (seq-find 'find-theme '(doom-nord
+  (seq-find 'find-theme '(
+                          doom-sourcerer ; dark with blue hints
+                          ample-flat ; brownish muted colors
+                          doom-gruvbox
+                          doom-nord
                           doom-wilmersdorf ; gentoo chill
                           doom-tomorrow-night ; blueish muted colors
                           doom-1337 ; dark brighter text
                           doom-opera ; grey
                           doom-ayu-mirage ; navy contrast yellows
                           doom-plain-dark
-                          ample-flat ; brownish muted colors
                           srcery
                           dracula ; gentoo no chill
                           noctilux
@@ -290,7 +294,7 @@ M-x compile.
       ((daemonp) (add-hook 'after-make-frame-functions
                            (lambda (frame)
                              (select-frame frame)
-                             (load-theme 'srcery t))))
+                             (load-theme 'doom-sourcerer t))))
       (t (load-theme (pref-theme) t)))
 
 ;; (if (eq (pref-theme) 'doom-1337)
@@ -315,7 +319,7 @@ M-x compile.
         org-agenda-files (list "~/org")
         org-blank-before-new-entry '((heading . t) (plain-list-item . auto))
         org-cycle-separator-lines 1
-        org-startup-folded nil
+        org-startup-folded 'folded
         org-startup-indented 't
         org-log-done nil))
 
@@ -561,11 +565,29 @@ M-x compile.
   :commands helm-lsp-workspace-symbol)
 
 (use-package projectile
+  ;; projectile + ripgrep
   ;; https://github.com/bbatsov/projectile/issues/1777
   :ensure t
   :init
   (projectile-mode +1)
   (setq projectile-switch-project-action #'projectile-commander)
+  (setq projectile-globally-ignored-directories
+        '(".idea"
+          ".vscode"
+          ".ensime_cache"
+          ".eunit"
+          ".git"
+          ".hg"
+          ".fslckout"
+          "_FOSSIL_"
+          ".bzr"
+          "_darcs"
+          ".tox"
+          ".svn"
+          ".stack-work"
+          ".ccls-cache"
+          ".cache"
+          ".clangd"))
   :bind (:map projectile-mode-map
               ("C-c p" . projectile-command-map)))
 
