@@ -36,6 +36,10 @@
 (autoload 'zap-up-to-char "misc"
   "Kill up to, but not including ARGth occurrence of CHAR." t)
 
+(use-package fish-mode
+  :onlyif (executable-find "fish")
+  :ensure t)
+
 (use-package exec-path-from-shell
   ;; :onlyif (daemonp)
   :ensure t
@@ -139,8 +143,8 @@ M-x compile.
 
 (defun pref-font ()
   (if (window-system)
-      (let ((font (seq-find 'font-exist-p '("Roboto Mono-10"
-                                            "Inconsolata-11"
+      (let ((font (seq-find 'font-exist-p '("Roboto Mono-12"
+                                            "Inconsolata-13"
                                             "DejaVu Sans Mono-11"
                                             ))))
         (set-face-attribute 'default nil :font font))))
@@ -274,12 +278,15 @@ M-x compile.
 (defun pref-theme ()
   (seq-find 'find-theme '(
                           doom-sourcerer ; dark with blue hints
+                          doom-henna
+                          doom-wilmersdorf ; gentoo chill
+                          doom-one
+                          doom-1337 ; dark brighter text
+                          doom-badger
+                          doom-nord
                           ample-flat ; brownish muted colors
                           doom-gruvbox
-                          doom-nord
-                          doom-wilmersdorf ; gentoo chill
                           doom-tomorrow-night ; blueish muted colors
-                          doom-1337 ; dark brighter text
                           doom-opera ; grey
                           doom-ayu-mirage ; navy contrast yellows
                           doom-plain-dark
@@ -344,15 +351,15 @@ M-x compile.
         ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-diff-options "-w"
         ediff-split-window-function 'split-window-horizontally)
-  (custom-set-faces
-   '(ediff-current-diff-A ((t (:inherit 'magit-diff-removed))))
-   '(ediff-current-diff-B ((t (:inherit 'magit-diff-added))))
-   '(ediff-current-diff-C ((t (:inherit 'magit-diff-none))))
+  ;; (custom-set-faces
+  ;;  '(ediff-current-diff-A ((t (:inherit 'magit-diff-removed))))
+  ;;  '(ediff-current-diff-B ((t (:inherit 'magit-diff-added))))
+  ;;  '(ediff-current-diff-C ((t (:inherit 'magit-diff-none))))
 
-   '(ediff-fine-diff-A ((t (:inherit 'magit-diff-removed-highlight))))
-   '(ediff-fine-diff-B ((t (:inherit 'magit-diff-added-highlight))))
-   '(ediff-fine-diff-C ((t (:inherit 'magit-diff-none))))
-   )
+  ;;  '(ediff-fine-diff-A ((t (:inherit 'magit-diff-removed-highlight))))
+  ;;  '(ediff-fine-diff-B ((t (:inherit 'magit-diff-added-highlight))))
+  ;;  '(ediff-fine-diff-C ((t (:inherit 'magit-diff-none))))
+  ;;  )
 
   ;; (setq face-new-frame-defaults
   ;;       (cl-delete-if (lambda (face) (string-prefix-p "ediff" (symbol-name (car face))))
@@ -630,6 +637,7 @@ M-x compile.
 (use-package modern-cpp-font-lock
   :ensure t)
 (use-package cmake-mode
+  :onlyif (executable-find "cmake")
   :config
   (setq cmake-tab-width 4))
 
