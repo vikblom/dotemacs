@@ -10,6 +10,10 @@
 ;; (native-compile-async "~/.emacs.d/elpa/" 1 t)
 ;; (native-compile-async "<path/to/system/elisp/files>" <n> t)
 ;;
+;; On MacOs
+;; Cherry pick: https://github.com/emacs-mirror/emacs/commits/feature/more-fds
+;; brew install libxml2 gcc libgccjit jansson autoconf texinfo
+;; ./configure --with-cairo --with-xwidgets --with-native-compilation --with-poll
 
 (if (and (fboundp 'native-comp-available-p)
        (native-comp-available-p))
@@ -44,7 +48,7 @@
   ;; :onlyif (daemonp)
   :ensure t
   :config
-  (setq exec-path-from-shell-name "/usr/bin/fish")
+  (setq exec-path-from-shell-name (executable-find "fish"))
   (exec-path-from-shell-initialize))
 
 (defun double-indent ()
@@ -98,7 +102,8 @@ M-x compile.
 	  compilation-last-buffer)
      (progn
        (set-buffer compilation-last-buffer)
-       (revert-buffer t t))
+       (recompile)
+       )
    (call-interactively 'compile)))
 ;; color compilation buffer
 (ignore-errors
@@ -143,8 +148,8 @@ M-x compile.
 
 (defun pref-font ()
   (if (window-system)
-      (let ((font (seq-find 'font-exist-p '("Roboto Mono-12"
-                                            "Inconsolata-13"
+      (let ((font (seq-find 'font-exist-p '("Inconsolata-14"
+                                            "Roboto Mono-12"
                                             "DejaVu Sans Mono-11"
                                             ))))
         (set-face-attribute 'default nil :font font))))
@@ -179,6 +184,12 @@ M-x compile.
        (put 'upcase-region 'disabled nil)
        (put 'downcase-region 'disabled nil)
        (electric-pair-mode 1))
+
+(customize-set-variable 'display-buffer-base-action
+  '((display-buffer-reuse-window display-buffer-same-window)
+    (reusable-frames . t)))
+;; Avoid resizing.
+(customize-set-variable 'even-window-sizes nil)
 
 ;; INDENTATION
 (setq-default indent-tabs-mode nil
@@ -322,7 +333,7 @@ M-x compile.
   :config
   (define-key global-map (kbd "C-c l") 'org-store-link)
   (define-key global-map (kbd "C-c a") 'org-agenda)
-  (setq org-use-speed-commands 't
+  (setq ;;org-use-speed-commands 't
         org-agenda-files (list "~/org")
         org-blank-before-new-entry '((heading . t) (plain-list-item . auto))
         org-cycle-separator-lines 1
@@ -330,6 +341,10 @@ M-x compile.
         org-startup-indented 't
         org-log-done nil))
 
+(use-package pbcopy
+  :onlyif (eq system-type 'darwin)
+  :init
+  (turn-on-pbcopy))
 
 (use-package recentf
   :ensure t
@@ -491,6 +506,8 @@ M-x compile.
         helm-M-x-fuzzy-match t
         helm-semantic-fuzzy-match t
         helm-imenu-fuzzy-match t)
+  ;; https://github.com/emacs-helm/helm/issues/648
+  (setq ffap-machine-p-known 'reject)
   (defun helm-skip-dots (old-func &rest args)
     "Skip . and .. initially in helm-find-files.  First call OLD-FUNC with ARGS."
     (apply old-func args)
@@ -541,6 +558,7 @@ M-x compile.
    lsp-headerline-breadcrumb-enable t
    lsp-headerline-breadcrumb-icons-enable nil
    lsp-headerline-breadcrumb-enable-diagnostics nil
+   lsp-file-watch-threshold 2000 ;; enough for go stdlib
    )
   :hook ((go-mode . lsp-deferred)
          (clojure-mode . lsp-deferred)
@@ -600,6 +618,15 @@ M-x compile.
 
 (use-package helm-projectile
   :ensure t)
+
+(use-package perspective
+  :ensure t
+  ;; :bind
+  ;; ("C-x C-b" . persp-list-buffers)         ; or use a nicer switcher, see below
+  :custom
+  (persp-mode-prefix-key (kbd "C-c o"))  ; pick your own prefix key here
+  :init
+  (persp-mode))
 
 (use-package yaml-mode
   :ensure t)
