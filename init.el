@@ -12,7 +12,7 @@
 ;;
 ;; On MacOs
 ;; Cherry pick: https://github.com/emacs-mirror/emacs/commits/feature/more-fds
-;; brew install libxml2 gcc libgccjit jansson autoconf texinfo
+;; brew install libxml2 gcc libgccjit jansson autoconf texinfo imagemagick
 ;; ./configure --with-cairo --with-xwidgets --with-native-compilation --with-poll
 
 (if (and (fboundp 'native-comp-available-p)
@@ -174,8 +174,8 @@ M-x compile.
        (setq compilation-scroll-output t)
        (delete-selection-mode t)
        (setq x-select-enable-clipboard t)
-       (global-auto-revert-mode t)
-       (setq auto-revert-remote-files t)
+       ;; (global-auto-revert-mode t)
+       ;; (setq auto-revert-remote-files t)
        (setq split-height-threshold 100) ;; Impossibly tall
        (setq split-width-threshold 160) ;; Two 80s
        (setq require-final-newline t)
@@ -381,6 +381,7 @@ M-x compile.
   ;;                     face-new-frame-defaults))
   )
 
+(setq evil-want-keybinding nil)
 (use-package evil
   :ensure t
   :init
@@ -409,7 +410,8 @@ M-x compile.
               ("<tab>" . nil)
               ("TAB" . nil)
               ("<backtab>" . yas-expand)))
-;;(use-package yasnippet-snippets)
+(use-package yasnippet-snippets
+  :ensure t)
 
 
 ;; (use-package auto-complete
@@ -558,7 +560,7 @@ M-x compile.
    lsp-headerline-breadcrumb-enable t
    lsp-headerline-breadcrumb-icons-enable nil
    lsp-headerline-breadcrumb-enable-diagnostics nil
-   lsp-file-watch-threshold 2000 ;; enough for go stdlib
+   lsp-file-watch-threshold 1000 ;; enough for go stdlib
    )
   :hook ((go-mode . lsp-deferred)
          (clojure-mode . lsp-deferred)
@@ -727,7 +729,7 @@ M-x compile.
   :bind (:map go-mode-map
               ("C-c l l" . golang-clean-buffer)
               ("C-c l c" . compile)
-              ("C-c C-c" . compile-again)
+              ("C-c k" . compile-again)
               ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
@@ -742,7 +744,7 @@ M-x compile.
   :onlyif (executable-find "rustc")
   :ensure t
   :bind (:map rust-mode-map
-              ("C-c C-c" . compile-again)
+              ("C-c k" . compile-again)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
 

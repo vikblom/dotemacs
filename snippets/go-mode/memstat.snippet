@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: mem
+# key: memstat
+# --
+go func() {
+	var m runtime.MemStats
+	for {
+		runtime.ReadMemStats(&m)
+		fmt.Printf("%dkB\n", m.Alloc/1000)
+		time.Sleep(time.Second)
+	}
+}()
