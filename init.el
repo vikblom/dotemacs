@@ -113,6 +113,14 @@ M-x compile.
       (ansi-color-apply-on-region compilation-filter-start (point-max))))
   (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
 
+(defun prune-file-watchers ()
+  "Remove all existing file notification watches from Emacs."
+  (interactive)
+  (maphash
+   (lambda (key _value)
+     (file-notify-rm-watch key))
+   file-notify-descriptors))
+
 (defun uuid-create ()
   "Return a newly generated UUID. This uses a simple hashing of variable data."
   (let ((s (md5 (format "%s%s%s%s%s%s%s%s%s%s"
