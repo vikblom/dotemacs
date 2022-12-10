@@ -51,6 +51,13 @@
   (setq exec-path-from-shell-name (executable-find "fish"))
   (exec-path-from-shell-initialize))
 
+(use-package direnv
+  :onlyif (executable-find "direnv")
+  :ensure t
+  :config
+  (direnv-mode)
+  (setq direnv-always-show-summary nil))
+
 (defun double-indent ()
   (interactive)
   (replace-regexp "^\\( +\\)" "\\1\\1" nil (mark) (point)))
@@ -156,10 +163,13 @@ M-x compile.
 
 (defun pref-font ()
   (if (window-system)
-      (let ((font (seq-find 'font-exist-p '("Inconsolata-14"
-                                            "Roboto Mono-12"
-                                            "DejaVu Sans Mono-11"
-                                            ))))
+      (let ((font (seq-find 'font-exist-p (if (eq system-type 'darwin)
+                                              '("Inconsolata-14"
+                                                "Roboto Mono-12")
+                                            '("Inconsolata-11"
+                                              "Roboto Mono-10"
+                                              "DejaVu Sans Mono-11"
+                                              )))))
         (set-face-attribute 'default nil :font font))))
 
 (if (daemonp)
@@ -182,6 +192,7 @@ M-x compile.
        (setq compilation-scroll-output t)
        (delete-selection-mode t)
        (setq x-select-enable-clipboard t)
+       (setq x-select-enable-clipboard-manager nil)
        ;; (global-auto-revert-mode t)
        ;; (setq auto-revert-remote-files t)
        (setq split-height-threshold 100) ;; Impossibly tall
@@ -286,6 +297,9 @@ M-x compile.
   (setq srcery-black "#050505"))
 
 (use-package ample-theme
+  :ensure t)
+
+(use-package doom-themes
   :ensure t)
 
 (defun find-theme (theme)
