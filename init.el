@@ -93,7 +93,7 @@ end up leaving point on a space or newline character."
       (if (not (eq (point) (line-beginning-position)))
           (newline))
       (goto-char (region-end))
-      (insert "#+END_SRC")
+      (insert "#+END_SRC" ?\n)
       (if (not (eq (point) (line-end-position)))
           (newline)))))
 
@@ -204,9 +204,11 @@ M-x compile.
        (put 'downcase-region 'disabled nil)
        (electric-pair-mode 1))
 
-(customize-set-variable 'display-buffer-base-action
-  '((display-buffer-reuse-window display-buffer-same-window)
-    (reusable-frames . t)))
+(customize-set-variable
+ 'display-buffer-base-action
+ '((display-buffer-reuse-window display-buffer-same-window)
+   (reusable-frames . t)))
+
 ;; Avoid resizing.
 (customize-set-variable 'even-window-sizes nil)
 
@@ -403,14 +405,10 @@ M-x compile.
   ;;                     face-new-frame-defaults))
   )
 
-(setq evil-want-keybinding nil)
 (use-package evil
   :ensure t
   :init
-  (setq evil-want-integration t ;; This is optional since it's already set to t by default.
-        evil-want-keybinding nil
-        ;; evil-want-minibuffer t
-        )
+  (setq evil-want-keybinding nil)
   :config
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
@@ -423,7 +421,6 @@ M-x compile.
   :config
   (evil-collection-init))
 
-
 (use-package yasnippet
   :ensure t
   :config
@@ -435,7 +432,6 @@ M-x compile.
 (use-package yasnippet-snippets
   :ensure t)
 
-
 ;; (use-package auto-complete
 ;;   :ensure t
 ;;   :config
@@ -445,12 +441,11 @@ M-x compile.
 ;;   (ac-set-trigger-key "<tab>")
 ;;   (setq ac-auto-start nil))
 
-
 (use-package paredit
   :ensure t
   :config
   :hook ((emacs-lisp-mode
-          eval-expression-minibuffer-setup
+          ;; eval-expression-minibuffer-setup
           ielm-mode
           lisp-mode
           lisp-interaction-mode
@@ -590,8 +585,8 @@ M-x compile.
          ;;(c-mode . lsp-deferred)
          ;;(c++-mode . lsp-deferred)
          (lsp-mode . (lambda ()
-                      (add-hook 'before-save-hook #'lsp-format-buffer t t)
-                      (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+                       (add-hook 'before-save-hook #'lsp-format-buffer t t)
+                       (add-hook 'before-save-hook #'lsp-organize-imports t t)))
          )
   )
 
@@ -658,6 +653,7 @@ M-x compile.
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
 
+
 ;; C-lang
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -684,6 +680,7 @@ M-x compile.
   :onlyif (executable-find "ctags")
   :bind (:map c-mode-map ("<f5>" . ctags-update)))
 
+
 ;; C++-lang
 (use-package modern-cpp-font-lock
   :ensure t)
@@ -691,7 +688,6 @@ M-x compile.
   :onlyif (executable-find "cmake")
   :config
   (setq cmake-tab-width 4))
-
 
 (defun create-etags (dir-name)
   "Create tags file."
@@ -701,13 +697,6 @@ M-x compile.
      (format "find %s -type f -name \"*.[ch]\" | etags -" dir-name))
     (visit-tags-table (concat dir-name "TAGS"))))
 
-(defun lsp-go-tags ()
-  "Set tags for LSP Go"
-  (interactive)
-  ;; FIXME: Loop through the variable and replace earlier -tags.
-  (let ((tags (read-from-minibuffer "-tags=")))
-    (setq lsp-go-build-flags (vector (s-join "" (list "-tags=" tags))))))
-
 (use-package clang-format
   :onlyif (executable-find "clang-format")
   :defer t
@@ -715,7 +704,6 @@ M-x compile.
   (setq clang-format-style "{BasedOnStyle: WebKit, PointerAlignment: Right}")
   ;:bind (:map c-mode-map ("C-c f" . clang-format-buffer))
   )
-
 
 
 ;; Scheme-lang
@@ -756,6 +744,14 @@ M-x compile.
               ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
+
+(defun lsp-go-tags ()
+  "Set tags for LSP Go"
+  (interactive)
+  ;; FIXME: Loop through the variable and replace earlier -tags.
+  (let ((tags (read-from-minibuffer "-tags=")))
+    (setq lsp-go-build-flags (vector (s-join "" (list "-tags=" tags))))))
+
 
 ;; Rust
 ;; rustup component add rust-src
