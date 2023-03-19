@@ -113,12 +113,14 @@ M-x compile.
        )
    (call-interactively 'compile)))
 ;; color compilation buffer
-(ignore-errors
-  (require 'ansi-color)
-  (defun my-colorize-compilation-buffer ()
-    (when (eq major-mode 'compilation-mode)
-      (ansi-color-apply-on-region compilation-filter-start (point-max))))
-  (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
+(use-package ansi-color
+    :hook (compilation-filter . ansi-color-compilation-filter))
+;; (ignore-errors
+;;   (require 'ansi-color)
+;;   (defun my-colorize-compilation-buffer ()
+;;     (when (eq major-mode 'compilation-mode)
+;;       (ansi-color-apply-on-region compilation-filter-start (point-max))))
+;;   (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
 
 (defun prune-file-watchers ()
   "Remove all existing file notification watches from Emacs."
@@ -166,8 +168,9 @@ M-x compile.
       (let ((font (seq-find 'font-exist-p (if (eq system-type 'darwin)
                                               '("Inconsolata-14"
                                                 "Roboto Mono-12")
-                                            '("Inconsolata-11"
-                                              "Roboto Mono-10"
+                                            '(
+                                              "Roboto Mono-8"
+                                              "Inconsolata-10"
                                               "DejaVu Sans Mono-11"
                                               )))))
         (set-face-attribute 'default nil :font font))))
@@ -204,10 +207,13 @@ M-x compile.
        (put 'downcase-region 'disabled nil)
        (electric-pair-mode 1))
 
-(customize-set-variable
- 'display-buffer-base-action
- '((display-buffer-reuse-window display-buffer-same-window)
-   (reusable-frames . t)))
+;; Re-use frame almost always.
+;; FIXME: Does not play nice with magit etc.
+;; Two new frames on top of each other does not make much sense.
+;; (customize-set-variable
+;;  'display-buffer-base-action
+;;  '((display-buffer-reuse-window display-buffer-same-window)
+;;    (reusable-frames . t)))
 
 ;; Avoid resizing.
 (customize-set-variable 'even-window-sizes nil)
@@ -336,7 +342,7 @@ M-x compile.
       ((daemonp) (add-hook 'after-make-frame-functions
                            (lambda (frame)
                              (select-frame frame)
-                             (load-theme 'doom-sourcerer t))))
+                             (load-theme (pref-theme) t))))
       (t (load-theme (pref-theme) t)))
 
 ;; (if (eq (pref-theme) 'doom-1337)
@@ -552,61 +558,101 @@ M-x compile.
 
 ;; Integrates with LSP
 ;; Leading bind C-c ! ...
-(use-package flycheck
-  :ensure t
-  :config
-  (setq flycheck-keymap-prefix
-        (define-key flycheck-mode-map (kbd "C-c f") flycheck-command-map)))
+;; (use-package flycheck
+;;   :ensure t
+;;   :config
+;;   (setq flycheck-keymap-prefix
+;;         (define-key flycheck-mode-map (kbd "C-c f") flycheck-command-map)))
+;; FIXME: Eglot uses flymake.
 
-(use-package lsp-mode
+
+(use-package flymake
   :ensure t
-  :commands lsp
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  :config
-  ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
-  (setq
-   lsp-eldoc-enable-hover t
-   lsp-modeline-diagnostics-enable nil
-   lsp-signature-auto-activate nil
-   lsp-signature-render-documentation nil
-   ;;lsp-diagnostic-package :none
-   ;;lsp-enable-on-type-formatting nil
-   lsp-signature-render-documentation nil
-   lsp-lens-enable nil
-   lsp-headerline-breadcrumb-enable t
-   lsp-headerline-breadcrumb-icons-enable nil
-   lsp-headerline-breadcrumb-enable-diagnostics nil
-   lsp-file-watch-threshold 1000 ;; enough for go stdlib
-   )
-  :hook ((go-mode . lsp-deferred)
-         (clojure-mode . lsp-deferred)
-         (rust-mode . lsp-deferred)
-         ;;(c-mode . lsp-deferred)
-         ;;(c++-mode . lsp-deferred)
-         (lsp-mode . (lambda ()
-                       (add-hook 'before-save-hook #'lsp-format-buffer t t)
-                       (add-hook 'before-save-hook #'lsp-organize-imports t t)))
-         )
+  :bind
+  ("C-c f p" . flymake-goto-prev-error)
+  ("C-c f n" . flymake-goto-next-error)
   )
 
-(use-package lsp-ui
-  :ensure t
-  :commands lsp-ui-mode
-  :custom
-  (lsp-ui-peek-always-show t)
-  (lsp-ui-sideline-enable t)
-  (lsp-ui-doc-enable t)
-  (lsp-ui-doc-position 'at-point)
-  (setq lsp-ui-doc-max-width 150
-        lsp-ui-doc-max-height 25)
-  :config
-  (setq lsp-ui-doc-show-with-mouse nil)
-  :bind (:map lsp-ui-doc-mode-map ("C-c i" . lsp-ui-doc-focus-frame)))
+(use-package eldoc-box
+  :ensure t)
 
-(use-package helm-lsp
+(use-package markdown-mode
+  :ensure t)
+
+(use-package eglot
   :ensure t
-  :commands helm-lsp-workspace-symbol)
+  :hook (eglot-managed-mode . company-mode)
+  ;; Organize on save.
+  :hook (eglot-managed-mode
+         . (lambda ()
+             (add-hook 'before-save-hook #'eglot-format t t)
+             (add-hook 'before-save-hook #'eglot-code-action-organize-imports t t)))
+  :config
+  (add-to-list 'eglot-server-programs
+               '(go-mode . ("gopls" "-remote=auto")))
+  (setq eldoc-echo-area-use-multiline-p 1)
+  :bind (:map eglot-mode-map
+              ("<normal-state> K" . eldoc-box-eglot-help-at-point)
+              ("C-c r" . eglot-rename)
+              ("C-c i" . eglot-find-implementation)
+              ("C-c a" . eglot-code-actions)
+              )
+  )
+
+;; LSP Debug
+;; (setq lsp-log-io 't)
+;; (setq lsp-go-gopls-server-args '("-remote=auto" "-debug=localhost:6060" "-logfile=auto"))
+;; (setq lsp-keep-workspace-alive nil)
+
+;; (use-package lsp-mode
+;;   :ensure t
+;;   :commands lsp
+;;   :init
+;;   (setq lsp-keymap-prefix "C-c l")
+;;   :config
+;;   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+;;   (setq
+;;    lsp-eldoc-enable-hover t
+;;    lsp-modeline-diagnostics-enable nil
+;;    lsp-signature-auto-activate nil
+;;    lsp-signature-render-documentation nil
+;;    ;;lsp-diagnostic-package :none
+;;    ;;lsp-enable-on-type-formatting nil
+;;    lsp-signature-render-documentation nil
+;;    lsp-lens-enable nil
+;;    lsp-headerline-breadcrumb-enable t
+;;    lsp-headerline-breadcrumb-icons-enable nil
+;;    lsp-headerline-breadcrumb-enable-diagnostics nil
+;;    lsp-file-watch-threshold 1000 ;; enough for go stdlib
+;;    )
+;;   :hook ((go-mode . lsp-deferred)
+;;          (clojure-mode . lsp-deferred)
+;;          (rust-mode . lsp-deferred)
+;;          ;;(c-mode . lsp-deferred)
+;;          ;;(c++-mode . lsp-deferred)
+;;          (lsp-mode . (lambda ()
+;;                        (add-hook 'before-save-hook #'lsp-format-buffer t t)
+;;                        (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+;;          )
+;;   )
+
+;; (use-package lsp-ui
+;;   :ensure t
+;;   :commands lsp-ui-mode
+;;   :custom
+;;   (lsp-ui-peek-always-show t)
+;;   (lsp-ui-sideline-enable t)
+;;   ;; (lsp-ui-doc-enable t)
+;;   (lsp-ui-doc-position 'at-point)
+;;   (setq lsp-ui-doc-max-width 150
+;;         lsp-ui-doc-max-height 25)
+;;   :config
+;;   (setq lsp-ui-doc-show-with-mouse nil)
+;;   :bind (:map lsp-ui-doc-mode-map ("C-c i" . lsp-ui-doc-focus-frame)))
+
+;; (use-package helm-lsp
+;;   :ensure t
+;;   :commands helm-lsp-workspace-symbol)
 
 (use-package projectile
   ;; projectile + ripgrep
@@ -723,14 +769,15 @@ M-x compile.
   :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
+  :hook (go-mode . eglot-ensure)
   :config
-  (defun golang-clean-buffer ()
-    (interactive)
-    (progn
-      (save-some-buffers)
-      (lsp-organize-imports)
-      (lsp-format-buffer)
-      (save-buffer)))
+  ;; (defun golang-clean-buffer ()
+  ;;   (interactive)
+  ;;   (progn
+  ;;     (save-some-buffers)
+  ;;     (lsp-organize-imports)
+  ;;     (lsp-format-buffer)
+  ;;     (save-buffer)))
   (add-hook 'go-mode-hook
             (lambda ()
               (setq-local compile-command "go test")
@@ -761,6 +808,7 @@ M-x compile.
 (use-package rust-mode
   :onlyif (executable-find "rustc")
   :ensure t
+  :hook (rust-mode . (lambda () (setq-local compile-command "cargo test --lib --color=always -- --nocapture")))
   :bind (:map rust-mode-map
               ("C-c k" . compile-again)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
