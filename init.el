@@ -166,8 +166,8 @@ M-x compile.
       (let ((font (seq-find 'font-exist-p (if (eq system-type 'darwin)
                                               '("Inconsolata-14"
                                                 "Roboto Mono-12")
-                                            '("Inconsolata-11"
-                                              "Roboto Mono-10"
+                                            '("Roboto Mono-8"
+                                              "Inconsolata-9"
                                               "DejaVu Sans Mono-11"
                                               )))))
         (set-face-attribute 'default nil :font font))))
@@ -363,7 +363,16 @@ M-x compile.
         org-cycle-separator-lines 1
         org-startup-folded 'folded
         org-startup-indented 't
-        org-log-done nil))
+        org-log-done nil
+        ;; Babel
+        org-confirm-babel-evaluate nil
+        org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        )
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '((emacs-lisp . t)
+                                 (shell . t)
+                                 (sql . t))))
 
 (use-package pbcopy
   :onlyif (eq system-type 'darwin)
@@ -573,15 +582,19 @@ M-x compile.
    ;;lsp-diagnostic-package :none
    ;;lsp-enable-on-type-formatting nil
    lsp-signature-render-documentation nil
-   lsp-lens-enable nil
+   ;; lsp-lens-enable nil
    lsp-headerline-breadcrumb-enable t
    lsp-headerline-breadcrumb-icons-enable nil
    lsp-headerline-breadcrumb-enable-diagnostics nil
    lsp-file-watch-threshold 1000 ;; enough for go stdlib
+   ;; performance
+   read-process-output-max (* 1024 1024) ;; 1mb
+   gc-cons-threshold 100000000 ;; 100mb
    )
   :hook ((go-mode . lsp-deferred)
          (clojure-mode . lsp-deferred)
          (rust-mode . lsp-deferred)
+         (nix-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
          ;;(c++-mode . lsp-deferred)
          (lsp-mode . (lambda ()
@@ -723,6 +736,8 @@ M-x compile.
   :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
+  :custom (lsp-go-gopls-server-args '("-remote=auto" "-remote.debug=localhost:8080" "-remote.logfile=/tmp/gopls-daemon.log"))
+  ;; :custom (lsp-log-io t)
   :config
   (defun golang-clean-buffer ()
     (interactive)
