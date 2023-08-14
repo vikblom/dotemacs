@@ -11,9 +11,12 @@
 ;; (native-compile-async "<path/to/system/elisp/files>" <n> t)
 ;;
 ;; On MacOs
-;; Cherry pick: https://github.com/emacs-mirror/emacs/commits/feature/more-fds
+;; Might work: https://github.com/emacs-mirror/emacs/commits/feature/more-fds ?
+;; Compile with bumped open file limit: https://en.liujiacai.net/2022/09/03/emacs-maxopenfiles/
 ;; brew install libxml2 gcc libgccjit jansson autoconf texinfo imagemagick
-;; ./configure --with-cairo --with-xwidgets --with-native-compilation --with-poll
+;; set -x CPATH (xcrun --show-sdk-path)/usr/include:(xcrun --show-sdk-path)/usr/include/libxml2
+;; ./configure --with-modules --with-ns --disable-ns-self-contained --with-native-compilation "CFLAGS=-DFD_SETSIZE=10240 -DDARWIN_UNLIMITED_SELECT"
+
 
 (if (and (fboundp 'native-comp-available-p)
        (native-comp-available-p))
@@ -50,6 +53,7 @@
   :config
   (setq exec-path-from-shell-name (executable-find "fish"))
   (exec-path-from-shell-initialize))
+;; (setq exec-path (append exec-path '("/Users/viktor/.nix-profile/bin")))
 
 (use-package direnv
   :onlyif (executable-find "direnv")
@@ -202,7 +206,11 @@ M-x compile.
        (fset 'yes-or-no-p 'y-or-n-p)
        (put 'upcase-region 'disabled nil)
        (put 'downcase-region 'disabled nil)
-       (electric-pair-mode 1))
+       (electric-pair-mode 1)
+       ;; performance
+       read-process-output-max (* 1024 1024) ;; 1mb
+       gc-cons-threshold 100000000 ;; 100 mb
+       )
 
 (customize-set-variable
  'display-buffer-base-action
@@ -217,7 +225,8 @@ M-x compile.
               transient-mark-mode t
               tab-width 4
               truncate-lines t
-              truncate-partial-width-windows 'nil)
+              truncate-partial-width-windows 'nil
+              fill-column 80)
 
 ;; KEYBINDS
 (progn (global-set-key [f6] 'toggle-truncate-lines)
@@ -352,23 +361,27 @@ M-x compile.
 
 (setq winner-mode 't)
 
+(use-package sql)
+(use-package sql-indent
+  :hook (sql-mode . sqlind-minor-mode))
+
 ;; http://notesyoujustmightwanttosave.blogspot.com/2011/12/org-speed-keys.html
 (use-package org
   :config
   (define-key global-map (kbd "C-c l") 'org-store-link)
   (define-key global-map (kbd "C-c a") 'org-agenda)
   (setq ;;org-use-speed-commands 't
-        org-agenda-files (list "~/org")
-        org-blank-before-new-entry '((heading . t) (plain-list-item . auto))
-        org-cycle-separator-lines 1
-        org-startup-folded 'folded
-        org-startup-indented 't
-        org-log-done nil
-        ;; Babel
-        org-confirm-babel-evaluate nil
-        org-src-fontify-natively t
-        org-src-tab-acts-natively t
-        )
+   org-agenda-files (list "~/org")
+   org-blank-before-new-entry '((heading . t) (plain-list-item . auto))
+   org-cycle-separator-lines 1
+   org-startup-folded 'folded
+   org-startup-indented 't
+   org-log-done nil
+   ;; Babel
+   org-confirm-babel-evaluate nil
+   org-src-fontify-natively t
+   org-src-tab-acts-natively t
+   )
   (org-babel-do-load-languages 'org-babel-load-languages
                                '((emacs-lisp . t)
                                  (shell . t)
@@ -399,6 +412,8 @@ M-x compile.
         ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-diff-options "-w"
         ediff-split-window-function 'split-window-horizontally)
+  (setq magit-section-initial-visibility-alist
+        '((stashes . hide) (untracked . hide) (commit . show) (unpushed . show) (status . show)))
   ;; (custom-set-faces
   ;;  '(ediff-current-diff-A ((t (:inherit 'magit-diff-removed))))
   ;;  '(ediff-current-diff-B ((t (:inherit 'magit-diff-added))))
@@ -414,6 +429,10 @@ M-x compile.
   ;;                     face-new-frame-defaults))
   )
 
+;; (use-package forge
+;;   :ensure t
+;;   :after magit)
+
 (use-package evil
   :ensure t
   :init
@@ -422,7 +441,10 @@ M-x compile.
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
   ;; Emacs in terminal cannot tell <tab> from TAB (which is the same as C-i).
-  (define-key evil-motion-state-map (kbd "TAB") nil))
+  (define-key evil-motion-state-map (kbd "TAB") nil)
+  ;; Collides with xref-find-definition
+  (define-key evil-normal-state-map (kbd "M-.") nil)
+)
 
 (use-package evil-collection
   :after evil
@@ -695,12 +717,12 @@ M-x compile.
 
 
 ;; C++-lang
-(use-package modern-cpp-font-lock
-  :ensure t)
-(use-package cmake-mode
-  :onlyif (executable-find "cmake")
-  :config
-  (setq cmake-tab-width 4))
+;; (use-package modern-cpp-font-lock
+;;   :ensure t)
+;; (use-package cmake-mode
+;;   :onlyif (executable-find "cmake")
+;;   :config
+;;   (setq cmake-tab-width 4))
 
 (defun create-etags (dir-name)
   "Create tags file."
@@ -736,7 +758,7 @@ M-x compile.
   :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
-  :custom (lsp-go-gopls-server-args '("-remote=auto" "-remote.debug=localhost:8080" "-remote.logfile=/tmp/gopls-daemon.log"))
+  :custom (lsp-go-gopls-server-args '("-remote=auto" "-remote.debug=localhost:8008" "-remote.logfile=/tmp/gopls-daemon.log"))
   ;; :custom (lsp-log-io t)
   :config
   (defun golang-clean-buffer ()
