@@ -50,9 +50,10 @@
 (use-package exec-path-from-shell
   :ensure t
   :config
-  ;(setq exec-path-from-shell-name (executable-find "fish"))
-  (exec-path-from-shell-initialize)
-  )
+  (if (not (eq system-type 'darwin))
+      (setq exec-path-from-shell-name (executable-find "fish"))
+    )
+  (exec-path-from-shell-initialize))
 
 (use-package direnv
   :onlyif (executable-find "direnv")
@@ -161,9 +162,12 @@ M-x compile.
       (let ((font (seq-find 'font-exist-p (if (eq system-type 'darwin)
                                               '("Inconsolata-14"
                                                 "Roboto Mono-12")
-                                            '("Roboto Mono-8"
-                                              "Inconsolata-9"
-                                              "DejaVu Sans Mono-11"
+                                            '(
+                                              "Fira Code-8"
+                                              "Inconsolata-10"
+                                              "Roboto Mono-8"
+                                              "Meslo LG S-8"
+                                              "DejaVu Sans Mono-9"
                                               )))))
         (set-face-attribute 'default nil :font font))))
 
@@ -191,7 +195,7 @@ M-x compile.
        ;; (global-auto-revert-mode t)
        ;; (setq auto-revert-remote-files t)
        (setq split-height-threshold 100) ;; Impossibly tall
-       (setq split-width-threshold 160) ;; Two 80s
+       (setq split-width-threshold 160)  ;; Two 80s
        (setq require-final-newline t)
        (setq bookmark-save-flag 1)
        (fset 'yes-or-no-p 'y-or-n-p)
@@ -313,6 +317,7 @@ M-x compile.
 (defun pref-theme ()
   (seq-find 'find-theme '(
                           doom-sourcerer ; dark with blue hints
+                          doom-palenight ; faded mid blue
                           doom-henna
                           doom-wilmersdorf ; gentoo chill
                           doom-one
@@ -748,8 +753,11 @@ M-x compile.
   :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
-  :custom (lsp-go-gopls-server-args '("-remote=auto" "-remote.debug=localhost:8008" "-remote.logfile=/tmp/gopls-daemon.log"))
-  ;; :custom (lsp-log-io t)
+  :custom (lsp-go-gopls-server-args '("-logfile=/tmp/gopls-client.log"
+                                      "-rpc.trace"
+                                      "-remote=auto"
+                                      "-remote.debug=localhost:8080"
+                                      "-remote.logfile=/tmp/gopls-daemon.log"))
   :config
   (defun golang-clean-buffer ()
     (interactive)
