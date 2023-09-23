@@ -48,12 +48,11 @@
   :ensure t)
 
 (use-package exec-path-from-shell
-  ;; :onlyif (daemonp)
   :ensure t
   :config
-  (setq exec-path-from-shell-name (executable-find "fish"))
-  (exec-path-from-shell-initialize))
-;; (setq exec-path (append exec-path '("/Users/viktor/.nix-profile/bin")))
+  ;(setq exec-path-from-shell-name (executable-find "fish"))
+  (exec-path-from-shell-initialize)
+  )
 
 (use-package direnv
   :onlyif (executable-find "direnv")
@@ -123,14 +122,6 @@ M-x compile.
     (when (eq major-mode 'compilation-mode)
       (ansi-color-apply-on-region compilation-filter-start (point-max))))
   (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
-
-(defun prune-file-watchers ()
-  "Remove all existing file notification watches from Emacs."
-  (interactive)
-  (maphash
-   (lambda (key _value)
-     (file-notify-rm-watch key))
-   file-notify-descriptors))
 
 (defun uuid-create ()
   "Return a newly generated UUID. This uses a simple hashing of variable data."
@@ -273,13 +264,13 @@ M-x compile.
        (tool-bar-mode -1)
        (scroll-bar-mode -1)
        (menu-bar-mode -1)
-       ;;(add-hook 'prog-mode-hook 'linum-mode)
        (setq use-dialog-box nil)
        (column-number-mode 1)
        (line-number-mode 1)
        (global-hl-line-mode 1)
        (show-paren-mode 1)
-       (setq show-paren-delay 0))
+       (setq show-paren-delay 0
+             show-paren-context-when-offscreen 'overlay))
 
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
@@ -443,8 +434,7 @@ M-x compile.
   ;; Emacs in terminal cannot tell <tab> from TAB (which is the same as C-i).
   (define-key evil-motion-state-map (kbd "TAB") nil)
   ;; Collides with xref-find-definition
-  (define-key evil-normal-state-map (kbd "M-.") nil)
-)
+  (define-key evil-normal-state-map (kbd "M-.") nil))
 
 (use-package evil-collection
   :after evil
@@ -547,7 +537,7 @@ M-x compile.
          ("M-y" . helm-show-kill-ring)
          ("C-x C-f" . helm-find-files)
          ("C-x f" . helm-find)
-         ("C-c C-j" . helm-semantic-or-imenu))
+         ("M-i" . helm-semantic-or-imenu))
   :bind (:map helm-map
               ("C-j" . helm-ff-RET))
   :config
@@ -604,7 +594,7 @@ M-x compile.
    ;;lsp-diagnostic-package :none
    ;;lsp-enable-on-type-formatting nil
    lsp-signature-render-documentation nil
-   ;; lsp-lens-enable nil
+   lsp-lens-enable nil
    lsp-headerline-breadcrumb-enable t
    lsp-headerline-breadcrumb-icons-enable nil
    lsp-headerline-breadcrumb-enable-diagnostics nil
@@ -871,7 +861,6 @@ M-x compile.
       snake-width 15)
 
 ;; Matlab mode
-;;(autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
 ;;(add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
 (use-package matlab
   :defer t
