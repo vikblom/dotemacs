@@ -399,9 +399,33 @@ M-x compile.
 
 
 
+;; (use-package forge
+;;   :ensure t
+;;   :after magit)
+
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-set-leader 'normal (kbd "<SPC>"))
+  (evil-mode 1)
+  (evil-set-undo-system 'undo-redo)
+  ;; Emacs in terminal cannot tell <tab> from TAB (which is the same as C-i).
+  (define-key evil-motion-state-map (kbd "TAB") nil)
+  ;; Collides with xref-find-definition
+  (define-key evil-normal-state-map (kbd "M-.") nil))
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
+
 (use-package magit
   :ensure t
   :config
+  (evil-global-set-key 'normal (kbd "<leader> g g") 'magit-status)
   (add-hook 'after-save-hook 'magit-after-save-refresh-status)
   (setq vc-handled-backends nil
         magit-log-section-commit-count 20
@@ -425,27 +449,6 @@ M-x compile.
   ;;                     face-new-frame-defaults))
   )
 
-;; (use-package forge
-;;   :ensure t
-;;   :after magit)
-
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-keybinding nil)
-  :config
-  (evil-mode 1)
-  (evil-set-undo-system 'undo-redo)
-  ;; Emacs in terminal cannot tell <tab> from TAB (which is the same as C-i).
-  (define-key evil-motion-state-map (kbd "TAB") nil)
-  ;; Collides with xref-find-definition
-  (define-key evil-normal-state-map (kbd "M-.") nil))
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :config
-  (evil-collection-init))
 
 (use-package yasnippet
   :ensure t
@@ -567,8 +570,7 @@ M-x compile.
 
 
 (use-package helm-ls-git
-  :bind ("C-c C-p" . helm-browse-project))
-
+  :bind ("<leader> b p" . helm-browse-project))
 
 (use-package company
   :ensure t
@@ -588,7 +590,7 @@ M-x compile.
   :ensure t
   :commands lsp
   :init
-  (setq lsp-keymap-prefix "C-c l")
+  (setq lsp-keymap-prefix "<leader> l")
   :config
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
   (setq
@@ -663,7 +665,10 @@ M-x compile.
           ".cache"
           ".clangd"))
   :bind (:map projectile-mode-map
-              ("C-c p" . projectile-command-map)))
+              ("<leader> p" . projectile-command-map))
+  ;; :config
+  ;; (evil-define-key 'normal projectile-mode-map (kbd "<leader> p") 'projectile-command-map)
+  )
 
 (use-package helm-projectile
   :ensure t)
@@ -673,7 +678,8 @@ M-x compile.
   ;; :bind
   ;; ("C-x C-b" . persp-list-buffers)         ; or use a nicer switcher, see below
   :custom
-  (persp-mode-prefix-key (kbd "C-c o"))  ; pick your own prefix key here
+  (persp-mode-prefix-key (kbd "<leader> o"))  ; pick your own prefix key here
+  ;; (evil-define-key 'normal projectile-mode-map (kbd "<leader> p") 'projectile-command-map)
   :init
   (persp-mode))
 
