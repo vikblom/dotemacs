@@ -17,7 +17,6 @@
 ;; set -x CPATH (xcrun --show-sdk-path)/usr/include:(xcrun --show-sdk-path)/usr/include/libxml2
 ;; ./configure --with-modules --with-ns --disable-ns-self-contained --with-native-compilation "CFLAGS=-DFD_SETSIZE=10240 -DDARWIN_UNLIMITED_SELECT"
 
-
 (if (and (fboundp 'native-comp-available-p)
        (native-comp-available-p))
   (message "Native compilation is available")
@@ -152,8 +151,8 @@ M-x compile.
 ;; FONT
 (require 'iso-transl)
 (prefer-coding-system 'utf-8)
-(global-font-lock-mode t)
-(setq font-lock-support-mode nil)
+;; (global-font-lock-mode t)
+;; (setq font-lock-support-mode nil)
 
 (defun font-exist-p (font) (find-font (font-spec :name font)))
 
@@ -163,9 +162,9 @@ M-x compile.
                                               '("Inconsolata-14"
                                                 "Roboto Mono-12")
                                             '(
-                                              "Fira Code-8"
-                                              "Inconsolata-10"
+                                              "Inconsolata-9"
                                               "Roboto Mono-8"
+                                              "Fira Code-8"
                                               "Meslo LG S-8"
                                               "DejaVu Sans Mono-9"
                                               )))))
@@ -207,10 +206,10 @@ M-x compile.
        gc-cons-threshold 100000000 ;; 100 mb
        )
 
-(customize-set-variable
- 'display-buffer-base-action
- '((display-buffer-reuse-window display-buffer-same-window)
-   (reusable-frames . t)))
+(setq display-buffer-base-action
+      '((display-buffer-reuse-window
+         display-buffer-same-window)
+        . ((reusable-frames . t))))
 
 ;; Avoid resizing.
 (customize-set-variable 'even-window-sizes nil)
@@ -251,13 +250,16 @@ M-x compile.
        (global-unset-key (kbd "<menuq>"))
 
        (global-set-key (kbd "M-z") 'zap-up-to-char)
-       (global-set-key (kbd "C-x C-b") 'ibuffer))
+       (global-set-key (kbd "C-x C-b") 'ibuffer)
+
+       (global-set-key (kbd "C-c k") 'compile-again))
 
 
 ;; SCROLLING
 (setq mouse-wheel-scroll-amount '(3 ((shift) . 1))
       mouse-wheel-progressive-speed nil
-      mouse-wheel-follow-mouse 't
+      mouse-wheel-follow-mouse t
+      pixel-scroll-precision-mode t
       scroll-step 1
       scroll-margin 5)
 
@@ -282,10 +284,23 @@ M-x compile.
 (defmacro with-face (str &rest properties)
   `(propertize ,str 'face (list ,@properties)))
 
-
-;; Stack Overflow header for each open buffer
-;; (load "~/.emacs.d/header.el")
-
+;; Treesitter
+;; Installing grammars:
+;; (setq treesit-language-source-alist
+;;    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+;;      (go "https://github.com/tree-sitter/tree-sitter-go")
+;;      (json "https://github.com/tree-sitter/tree-sitter-json")
+;;      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+;;      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
+(if (treesit-available-p)
+    (setq major-mode-remap-alist
+          '((go-mode . go-ts-mode)
+            (bash-mode . bash-ts-mode)
+            (json-mode . json-ts-mode)
+            ;; (markdown-mode . markdown-ts.mode) Doesn't exist?
+            (yaml-mode . yaml-ts-mode))))
+(setopt treesit-font-lock-level 4)
 
 ;; Theme setup
 (defun load-fresh-theme (theme)
@@ -552,6 +567,7 @@ M-x compile.
   (helm-mode 1)
   (setq helm-split-window-default-side 'below
         helm-M-x-fuzzy-match t
+        helm-split-window-inside-p t
         helm-semantic-fuzzy-match t
         helm-imenu-fuzzy-match t)
   ;; https://github.com/emacs-helm/helm/issues/648
@@ -576,7 +592,10 @@ M-x compile.
   :ensure t
   :bind (:map company-mode-map
               ("C-TAB" . company-complete)
-              ("<C-tab>" . company-complete)))
+              ("<C-tab>" . company-complete))
+  :config
+  (setq company-idle-delay 0.1
+        company-minimum-prefix-length 2))
 
 ;; Integrates with LSP
 ;; Leading bind C-c ! ...
@@ -593,13 +612,21 @@ M-x compile.
   (setq lsp-keymap-prefix "<leader> l")
   :config
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+  ;;(lsp-register-custom-settings '(("gopls.semanticTokens" t t)))
   (setq
    lsp-eldoc-enable-hover t
    lsp-modeline-diagnostics-enable nil
    lsp-signature-auto-activate nil
    lsp-signature-render-documentation nil
+
+   ;; Semantic tokens can slow down rendering.
+   ;; NOTE: Required gopls setting.
+   ;; lsp-semantic-tokens-enable t
+   ;; lsp-semantic-tokens-honor-refresh-requests t
+
    ;;lsp-diagnostic-package :none
    ;;lsp-enable-on-type-formatting nil
+   lsp-log-io t
    lsp-signature-render-documentation nil
    lsp-lens-enable nil
    lsp-headerline-breadcrumb-enable t
@@ -610,7 +637,7 @@ M-x compile.
    read-process-output-max (* 1024 1024) ;; 1mb
    gc-cons-threshold 100000000 ;; 100mb
    )
-  :hook ((go-mode . lsp-deferred)
+  :hook ((go-ts-mode . lsp-deferred)
          (clojure-mode . lsp-deferred)
          (rust-mode . lsp-deferred)
          (nix-mode . lsp-deferred)
@@ -683,12 +710,16 @@ M-x compile.
   :init
   (persp-mode))
 
-(use-package yaml-mode
+(use-package yaml-ts-mode
   :ensure t)
+
+(use-package markdown-mode
+  :ensure t
+  :config
+  (setq markdown-fontify-code-blocks-natively t))
 
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
-
 
 ;; C-lang
 (use-package cc-mode
@@ -699,18 +730,20 @@ M-x compile.
               ("M-n" . (lambda () (interactive) (c-beginning-of-defun -1)))
               ("C-c RET" . (lambda () (interactive) (compile "make -C .."))))
   :config
-  (electric-indent-mode -1)
+  ;; (setq electric-indent-mode nil)
   (setq c-default-style "linux"
-        c-basic-offset 4)
+        c-basic-offset 4
+        c-toggle-auto-newline 1)
   (c-set-offset 'substatement-open 0)
   (c-set-offset 'access-label -4)
   (c-set-offset 'topmost-intro-cont 0)
-  (c-toggle-auto-newline 0)
 
-  (require 'gud)
+  ;; (require 'gud)
   ;;(define-key gud-mode-map (kbd "C-SPC") 'gud-break)
-  (setq gdb-show-main t)
-  (setq gdb-many-windows t))
+  ;; (setq gdb-show-main t)
+  ;; (setq gdb-many-windows t)
+)
+
 
 (use-package ctags-update
   :onlyif (executable-find "ctags")
@@ -754,7 +787,7 @@ M-x compile.
 ;; go get golang.org/x/tools/cmd/...
 ;; go get golang.org/x/tools/gopls@latest
 ;; ?go get github.com/rogpeppe/godef
-(use-package go-mode
+(use-package go-ts-mode
   :onlyif (executable-find "go")
   :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
@@ -765,6 +798,7 @@ M-x compile.
                                       "-remote.debug=localhost:8080"
                                       "-remote.logfile=/tmp/gopls-daemon.log"))
   :config
+  (setq go-ts-mode-indent-offset 4) ;; ???
   (defun golang-clean-buffer ()
     (interactive)
     (progn
@@ -772,19 +806,25 @@ M-x compile.
       (lsp-organize-imports)
       (lsp-format-buffer)
       (save-buffer)))
-  (add-hook 'go-mode-hook
+  (add-hook 'go-ts-mode-hook
             (lambda ()
               (setq-local compile-command "go test")
               ;;(setq-local compilation-read-command nil)
               ))
-  :bind (:map go-mode-map
+  :bind (:map go-ts-mode-map
               ("C-c l l" . golang-clean-buffer)
               ("C-c l c" . compile)
-              ("C-c k" . compile-again)
+              ;; ("C-c k" . compile-again)
               ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ;; ("<M-up>" . beginning-of-defun)
-              ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
-              ("M-p" . beginning-of-defun)))
+              ("M-n" . (lambda () (interactive)
+                         (treesit-search-forward-goto
+                          (treesit-node-at (point))
+                          "^\\(import_declaration\\|var_declaration\\|function_declaration\\)$" 'start)))
+              ("M-p" . (lambda () (interactive)
+                         (treesit-search-forward-goto
+                          (treesit-node-at (point))
+                          "^\\(import_declaration\\|var_declaration\\|function_declaration\\)$" 'start 'backward)))))
 
 (defun lsp-go-tags ()
   "Set tags for LSP Go"
@@ -803,7 +843,7 @@ M-x compile.
   :onlyif (executable-find "rustc")
   :ensure t
   :bind (:map rust-mode-map
-              ("C-c k" . compile-again)
+              ;; ("C-c k" . compile-again)
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
 
