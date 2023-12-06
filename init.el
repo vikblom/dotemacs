@@ -812,19 +812,19 @@ M-x compile.
               ;;(setq-local compilation-read-command nil)
               ))
   :bind (:map go-ts-mode-map
-              ("C-c l l" . golang-clean-buffer)
-              ("C-c l c" . compile)
+              ("<leader> l l" . golang-clean-buffer)
+              ("<leader> l c" . compile)
               ;; ("C-c k" . compile-again)
               ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ;; ("<M-up>" . beginning-of-defun)
               ("M-n" . (lambda () (interactive)
                          (treesit-search-forward-goto
                           (treesit-node-at (point))
-                          "^\\(import_declaration\\|var_declaration\\|function_declaration\\)$" 'start)))
+                          "^\\(import\\|function\\|method\\)_declaration$" 'start)))
               ("M-p" . (lambda () (interactive)
                          (treesit-search-forward-goto
                           (treesit-node-at (point))
-                          "^\\(import_declaration\\|var_declaration\\|function_declaration\\)$" 'start 'backward)))))
+                          "^\\(import\\|function\\|method\\)_declaration$" 'start 'backward)))))
 
 (defun lsp-go-tags ()
   "Set tags for LSP Go"
