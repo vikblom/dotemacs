@@ -826,6 +826,33 @@ M-x compile.
                           (treesit-node-at (point))
                           "^\\(import\\|function\\|method\\)_declaration$" 'start 'backward)))))
 
+(defun linebreak-struct ()
+  ;;
+  ;; TODO:
+  ;; - Operate on a region?
+  ;; - Handle parens and do the same for a function?
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (let* ((p (treesit-search-forward (treesit-node-at (point)) "^assignment_statement$"))
+           (children (treesit--children-covering-range-recurse p (line-beginning-position) (line-end-position) 0))
+           ;; Nodes what need adjusting.
+           (nodes (seq-filter (lambda (c) (member (treesit-node-type c) '("," "{" "}"))) children))
+           ;; Positions to adjust.
+           (positions (mapcar 'treesit-node-end nodes)))
+      ;; Insert characters back to front so that pending positions
+      ;; are not invalidated.
+      (dolist (p (sort positions '>))
+        (goto-char p)
+        (pcase (char-before)
+          ;; For } we want to achieve ",\n}".
+          (?\} (progn (backward-char)
+                      (insert-char ?\,)
+                      (newline-and-indent)))
+          ;; For , and { add a newline after.
+          ((or ?\{ ?\,) (newline-and-indent))
+          (x (message "unknown item %s" x)))))))
+
 (defun lsp-go-tags ()
   "Set tags for LSP Go"
   (interactive)
