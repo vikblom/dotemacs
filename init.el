@@ -464,11 +464,13 @@ M-x compile.
   ;;                     face-new-frame-defaults))
   )
 
-
 (use-package yasnippet
   :ensure t
   :config
   (yas-global-mode 1)
+  ;; Stop the company suggestion from hanging around and
+  ;; interfering with the placeholders.
+  (add-hook 'yas-before-expand-snippet-hook 'company-cancel)
   :bind (:map yas-minor-mode-map
               ("<tab>" . nil)
               ("TAB" . nil)
@@ -613,6 +615,8 @@ M-x compile.
   :config
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
   ;;(lsp-register-custom-settings '(("gopls.semanticTokens" t t)))
+  ;; (lsp-register-custom-settings '(("gopls.usePlaceholders" t t)))
+  (lsp-register-custom-settings '(("gopls.analyses.composites" t f)))
   (setq
    lsp-eldoc-enable-hover t
    lsp-modeline-diagnostics-enable nil
@@ -827,31 +831,30 @@ M-x compile.
                           "^\\(import\\|function\\|method\\)_declaration$" 'start 'backward)))))
 
 (defun linebreak-struct ()
-  ;;
-  ;; TODO:
-  ;; - Operate on a region?
-  ;; - Handle parens and do the same for a function?
   (interactive)
   (save-excursion
-    (beginning-of-line)
-    (let* ((p (treesit-search-forward (treesit-node-at (point)) "^assignment_statement$"))
-           (children (treesit--children-covering-range-recurse p (line-beginning-position) (line-end-position) 0))
+    (let* ((p (treesit-search-forward (treesit-node-at (point)) "^expression_list$"))
+           (children (treesit--children-covering-range-recurse p (treesit-node-start p) (treesit-node-end p) 0))
            ;; Nodes what need adjusting.
            (nodes (seq-filter (lambda (c) (member (treesit-node-type c) '("," "{" "}"))) children))
            ;; Positions to adjust.
            (positions (mapcar 'treesit-node-end nodes)))
       ;; Insert characters back to front so that pending positions
       ;; are not invalidated.
-      (dolist (p (sort positions '>))
-        (goto-char p)
-        (pcase (char-before)
-          ;; For } we want to achieve ",\n}".
-          (?\} (progn (backward-char)
-                      (insert-char ?\,)
-                      (newline-and-indent)))
-          ;; For , and { add a newline after.
-          ((or ?\{ ?\,) (newline-and-indent))
-          (x (message "unknown item %s" x)))))))
+      (progn
+        (message "node %s" p)
+        (message "childres %s" children)
+        (message "nodes %s" nodes)
+        (dolist (p (sort positions '>))
+          (goto-char p)
+          (pcase (char-before)
+            ;; For } we want to achieve ",\n}".
+            (?\} (progn (backward-char)
+                        (insert-char ?\,)
+                        (newline-and-indent)))
+            ;; For , and { add a newline after.
+            ((or ?\{ ?\,) (newline-and-indent))
+            (x (message "unknown item %s" x))))))))
 
 (defun lsp-go-tags ()
   "Set tags for LSP Go"
