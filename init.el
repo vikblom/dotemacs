@@ -177,6 +177,8 @@ M-x compile.
       (add-hook 'server-switch-hook #'raise-frame))
   (pref-font))
 
+(if (eq system-type 'darwin) (server-start))
+
 
 ;; BACKUP
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups/")))
@@ -413,11 +415,6 @@ M-x compile.
   :bind ("C-x C-r" . recentf-open-files))
 
 
-
-;; (use-package forge
-;;   :ensure t
-;;   :after magit)
-
 (use-package evil
   :ensure t
   :init
@@ -444,6 +441,7 @@ M-x compile.
   (add-hook 'after-save-hook 'magit-after-save-refresh-status)
   (setq vc-handled-backends nil
         magit-log-section-commit-count 20
+        magit-prefer-push-default 't
         ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-diff-options "-w"
         ediff-split-window-function 'split-window-horizontally)
@@ -568,6 +566,7 @@ M-x compile.
   :config
   (helm-mode 1)
   (setq helm-split-window-default-side 'below
+        helm-split-window-inside-p t
         helm-M-x-fuzzy-match t
         helm-split-window-inside-p t
         helm-semantic-fuzzy-match t
@@ -605,7 +604,8 @@ M-x compile.
   :ensure t
   :config
   (setq flycheck-keymap-prefix
-        (define-key flycheck-mode-map (kbd "C-c f") flycheck-command-map)))
+        (define-key flycheck-mode-map (kbd "C-c f") flycheck-command-map))
+  (add-hook 'js-json-mode-hook 'flycheck-mode))
 
 (use-package lsp-mode
   :ensure t
@@ -630,7 +630,7 @@ M-x compile.
 
    ;;lsp-diagnostic-package :none
    ;;lsp-enable-on-type-formatting nil
-   lsp-log-io t
+   ;; lsp-log-io t
    lsp-signature-render-documentation nil
    lsp-lens-enable nil
    lsp-headerline-breadcrumb-enable t
@@ -694,7 +694,9 @@ M-x compile.
           ".stack-work"
           ".ccls-cache"
           ".cache"
-          ".clangd"))
+          ".clangd"
+          "env"
+          "/nix/store"))
   :bind (:map projectile-mode-map
               ("<leader> p" . projectile-command-map))
   ;; :config
@@ -720,7 +722,7 @@ M-x compile.
 (use-package markdown-mode
   :ensure t
   :config
-  (setq markdown-fontify-code-blocks-natively t))
+  (setq markdown-fontify-code-blocks-natively nil))
 
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
@@ -786,20 +788,23 @@ M-x compile.
   (setq geiser-active-implementations '(chicken)
         geiser-chicken-compile-geiser-p nil))
 
-
 ;; GO-lang
 ;; go get golang.org/x/tools/cmd/...
 ;; go get golang.org/x/tools/gopls@latest
 ;; ?go get github.com/rogpeppe/godef
+(use-package go-mode
+  :onlyif (executable-find "go")
+  :ensure t)
 (use-package go-ts-mode
   :onlyif (executable-find "go")
   :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
   :custom (lsp-go-gopls-server-args '("-logfile=/tmp/gopls-client.log"
-                                      "-rpc.trace"
-                                      "-remote=auto"
-                                      "-remote.debug=localhost:8080"
+                                      ;; "-verbose"
+                                      ;; "-rpc.trace"
+                                      ;; "-remote=unix;/var/folders/g5/x31g1yjj74b39_c1kbg4vwzw0000gp/T/gopls-daemon.viktor"
+                                      "-remote.debug=localhost:8008"
                                       "-remote.logfile=/tmp/gopls-daemon.log"))
   :config
   (setq go-ts-mode-indent-offset 4) ;; ???
@@ -814,6 +819,17 @@ M-x compile.
             (lambda ()
               (setq-local compile-command "go test")
               ;;(setq-local compilation-read-command nil)
+              ;; Copy the fill paragraph n friends setup from go-mode.
+              (setq-local paragraph-start
+                          (concat "[[:space:]]*\\(?:"
+                                  comment-start-skip
+                                  "\\|\\*/?[[:space:]]*\\|\\)$"))
+              (setq-local paragraph-separate paragraph-start)
+              (setq-local fill-paragraph-function #'go-fill-paragraph)
+              (setq-local fill-forward-paragraph-function #'go--fill-forward-paragraph)
+              (setq-local adaptive-fill-function #'go--find-fill-prefix)
+              (setq-local adaptive-fill-first-line-regexp "")
+              (setq-local comment-line-break-function #'go--comment-indent-new-line)
               ))
   :bind (:map go-ts-mode-map
               ("<leader> l l" . golang-clean-buffer)
@@ -960,6 +976,8 @@ M-x compile.
               ("M-n" . matlab-end-of-defun)
               ("M-p" . matlab-beginning-of-defun)))
 
+;; JSON
+(setq js-indent-level 2)
 
 ;; LaTeX
 ;; (use-package tex
