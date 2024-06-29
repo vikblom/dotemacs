@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: diff
+# key: cmpd
+# --
+if d := cmp.Diff(want, got); d != "" {
+	t.Fatalf("$0 (-want, +got):\n%s", d)
+}
