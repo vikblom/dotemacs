@@ -727,6 +727,11 @@ M-x compile.
 ;; Today mode
 (load "~/.emacs.d/today-mode.el")
 
+;; Nix-lang
+(use-package nix-mode
+  :ensure t
+  :onlyif (executable-find "nix"))
+
 ;; C-lang
 (use-package cc-mode
   :bind (:map c-mode-map
@@ -748,7 +753,7 @@ M-x compile.
   ;;(define-key gud-mode-map (kbd "C-SPC") 'gud-break)
   ;; (setq gdb-show-main t)
   ;; (setq gdb-many-windows t)
-)
+  )
 
 
 (use-package ctags-update
