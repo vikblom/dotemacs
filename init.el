@@ -49,6 +49,7 @@
 (use-package exec-path-from-shell
   :ensure t
   :config
+  (setq exec-path-from-shell-warn-duration-millis 1000)
   (if (not (eq system-type 'darwin))
       (setq exec-path-from-shell-name (executable-find "fish"))
     )
@@ -222,6 +223,8 @@ M-x compile.
               tab-width 4
               truncate-lines t
               truncate-partial-width-windows 'nil
+              js-indent-level 2
+              typescript-indent-level 2
               fill-column 80)
 
 ;; KEYBINDS
@@ -255,6 +258,7 @@ M-x compile.
        (global-set-key (kbd "C-x C-b") 'ibuffer)
 
        (global-set-key (kbd "C-c k") 'compile-again))
+(global-unset-key (kbd "s-n"))
 
 
 ;; SCROLLING
@@ -293,6 +297,11 @@ M-x compile.
 ;;      (go "https://github.com/tree-sitter/tree-sitter-go")
 ;;      (json "https://github.com/tree-sitter/tree-sitter-json")
 ;;      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+;;      (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+;;      (prisma "https://github.com/victorhqc/tree-sitter-prisma")
+;;      (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+;;      (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+;;      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
 ;;      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 (if (treesit-available-p)
@@ -301,6 +310,10 @@ M-x compile.
             (bash-mode . bash-ts-mode)
             (json-mode . json-ts-mode)
             ;; (markdown-mode . markdown-ts.mode) Doesn't exist?
+            (prisma-mode . prisma-ts-mode)
+            (graphql-mode . graphql-ts-mode)
+            (dockerfile-mode . dockerfile-ts-mode)
+            ;;(typescript-mode . typescript-ts-mode)
             (yaml-mode . yaml-ts-mode))))
 (setopt treesit-font-lock-level 4)
 
@@ -402,6 +415,7 @@ M-x compile.
 
 (use-package pbcopy
   :onlyif (eq system-type 'darwin)
+  :ensure t
   :init
   (turn-on-pbcopy))
 
@@ -595,7 +609,7 @@ M-x compile.
               ("C-TAB" . company-complete)
               ("<C-tab>" . company-complete))
   :config
-  (setq company-idle-delay 0.1
+  (setq company-idle-delay 0.3
         company-minimum-prefix-length 2))
 
 ;; Integrates with LSP
@@ -612,11 +626,13 @@ M-x compile.
   :commands lsp
   :init
   (setq lsp-keymap-prefix "<leader> l")
-  :config
   ;; https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/
+  ;; Check workspace/configuration message
+  ;;
   ;;(lsp-register-custom-settings '(("gopls.semanticTokens" t t)))
   ;; (lsp-register-custom-settings '(("gopls.usePlaceholders" t t)))
-  (lsp-register-custom-settings '(("gopls.analyses.composites" t f)))
+  ;; (lsp-register-custom-settings '(("gopls.analyses.composites" t f)))
+  ;; (lsp-register-custom-settings '(("gopls.analyses.staticcheck" t t)))
   (setq
    lsp-eldoc-enable-hover t
    lsp-modeline-diagnostics-enable nil
@@ -630,7 +646,7 @@ M-x compile.
 
    ;;lsp-diagnostic-package :none
    ;;lsp-enable-on-type-formatting nil
-   ;; lsp-log-io t
+   lsp-log-io nil
    lsp-signature-render-documentation nil
    lsp-lens-enable nil
    lsp-headerline-breadcrumb-enable t
@@ -645,6 +661,9 @@ M-x compile.
          (clojure-mode . lsp-deferred)
          (rust-mode . lsp-deferred)
          (nix-mode . lsp-deferred)
+         (python-mode . lsp-deferred)
+         (javascript-mode . lsp-deferred)
+         (typescript-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
          ;;(c++-mode . lsp-deferred)
          (lsp-mode . (lambda ()
@@ -670,6 +689,9 @@ M-x compile.
 (use-package helm-lsp
   :ensure t
   :commands helm-lsp-workspace-symbol)
+
+;; (use-package rg
+;;   :ensure t)
 
 (use-package projectile
   ;; projectile + ripgrep
@@ -697,6 +719,12 @@ M-x compile.
           ".clangd"
           "env"
           "/nix/store"))
+  ;; Move go to the front.
+  (letrec ((pred (lambda (item) (eq (car item) 'go)))
+           (gotype (cl-find-if pred projectile-project-types)))
+    (progn
+      (cl-delete-if pred projectile-project-types)
+      (setq projectile-project-types (cons gotype projectile-project-types))))
   :bind (:map projectile-mode-map
               ("<leader> p" . projectile-command-map))
   ;; :config
@@ -884,6 +912,9 @@ M-x compile.
   (let ((tags (read-from-minibuffer "-tags=")))
     (setq lsp-go-build-flags (vector (s-join "" (list "-tags=" tags))))))
 
+
+(use-package dockerfile-mode
+  :ensure t)
 
 ;; Rust
 ;; rustup component add rust-src
