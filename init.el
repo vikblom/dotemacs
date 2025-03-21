@@ -51,8 +51,7 @@
   :config
   (setq exec-path-from-shell-warn-duration-millis 1000)
   (if (not (eq system-type 'darwin))
-      (setq exec-path-from-shell-name (executable-find "fish"))
-    )
+      (setq exec-path-from-shell-name (executable-find "fish")))
   (exec-path-from-shell-initialize))
 
 (use-package direnv
@@ -657,6 +656,12 @@ M-x compile.
    read-process-output-max (* 1024 1024) ;; 1mb
    gc-cons-threshold 100000000 ;; 100mb
    )
+
+  ;; TODO: Put in dir-locals.el.
+  (with-eval-after-load 'lsp-mode
+    (dolist (dir '("[/\\\\]\\ui\\'"))
+      (push dir lsp-file-watch-ignored-directories)))
+
   :hook ((go-ts-mode . lsp-deferred)
          (clojure-mode . lsp-deferred)
          (rust-mode . lsp-deferred)
@@ -717,7 +722,7 @@ M-x compile.
           ".ccls-cache"
           ".cache"
           ".clangd"
-          "env"
+          "gen" ;; klash-graph
           "/nix/store"))
   ;; Move go to the front.
   (letrec ((pred (lambda (item) (eq (car item) 'go)))
@@ -744,8 +749,19 @@ M-x compile.
   :init
   (persp-mode))
 
+(use-package prettier-js
+  :onlyif (executable-find "prettier")
+  :ensure t
+  :config
+  (setq
+   prettier-js-show-errors nil))
+
+
 (use-package yaml-ts-mode
   :ensure t)
+
+(use-package graphql-mode
+  :hook (graphql-mode . prettier-js-mode))
 
 (use-package markdown-mode
   :ensure t
@@ -812,7 +828,6 @@ M-x compile.
   (setq clang-format-style "{BasedOnStyle: WebKit, PointerAlignment: Right}")
   ;:bind (:map c-mode-map ("C-c f" . clang-format-buffer))
   )
-
 
 ;; Scheme-lang
 (use-package geiser
