@@ -35,7 +35,7 @@
   (interactive)
   (find-file "~/.emacs.d/init.el"))
 
-(defun write-today ()
+(defun insert-today ()
   (interactive)
   (insert (format-time-string "%Y-%m-%d")))
 
@@ -163,7 +163,7 @@ M-x compile.
                                               '("Inconsolata-14"
                                                 "Roboto Mono-12")
                                             '(
-                                              "Inconsolata-9"
+                                              "Inconsolata:pixelsize=12"
                                               "Roboto Mono-8"
                                               "Fira Code-8"
                                               "Meslo LG S-8"
@@ -223,7 +223,7 @@ M-x compile.
               tab-width 4
               truncate-lines t
               truncate-partial-width-windows 'nil
-              js-indent-level 2
+              js-indent-level 4
               typescript-indent-level 2
               fill-column 80)
 
@@ -599,10 +599,6 @@ M-x compile.
   (advice-add #'helm-preselect :around #'helm-skip-dots)
   (advice-add #'helm-ff-move-to-first-real-candidate :around #'helm-skip-dots))
 
-
-(use-package helm-ls-git
-  :bind ("<leader> b p" . helm-browse-project))
-
 (use-package company
   :ensure t
   :bind (:map company-mode-map
@@ -611,6 +607,9 @@ M-x compile.
   :config
   (setq company-idle-delay 0.3
         company-minimum-prefix-length 2))
+
+(use-package helm-ls-git
+  :bind ("<leader> b p" . helm-browse-project))
 
 ;; Integrates with LSP
 ;; Leading bind C-c ! ...
@@ -664,6 +663,7 @@ M-x compile.
          (python-mode . lsp-deferred)
          (javascript-mode . lsp-deferred)
          (typescript-mode . lsp-deferred)
+         (zig-mode . lsp-deferred)
          ;;(c-mode . lsp-deferred)
          ;;(c++-mode . lsp-deferred)
          (lsp-mode . (lambda ()
@@ -833,12 +833,15 @@ M-x compile.
   :ensure t
   ;;(with-eval-after-load 'go-mode (require 'go-autocomplete))
   ;;(add-hook 'before-save-hook 'gofmt-before-save)
-  :custom (lsp-go-gopls-server-args '("-logfile=/tmp/gopls-client.log"
-                                      ;; "-verbose"
+  :custom (lsp-go-gopls-server-args '(;;"-logfile=/tmp/gopls-client.log"
+                                      ;;"-veryverbose"
                                       ;; "-rpc.trace"
+                                      "-remote=auto"
                                       ;; "-remote=unix;/var/folders/g5/x31g1yjj74b39_c1kbg4vwzw0000gp/T/gopls-daemon.viktor"
-                                      "-remote.debug=localhost:8008"
-                                      "-remote.logfile=/tmp/gopls-daemon.log"))
+                                      ;; "-remote=unix;/tmp/daemon.viktor"
+                                      ;;"-remote.debug=localhost:8008"
+                                      ;;"-remote.logfile=/tmp/gopls-viktor.log"
+                                      ))
   :config
   (setq go-ts-mode-indent-offset 4) ;; ???
   (defun golang-clean-buffer ()
@@ -1013,7 +1016,7 @@ M-x compile.
               ("M-p" . matlab-beginning-of-defun)))
 
 ;; JSON
-(setq js-indent-level 2)
+(setq js-indent-level 4)
 
 ;; LaTeX
 ;; (use-package tex
@@ -1041,3 +1044,26 @@ M-x compile.
 ;;     (local-set-key (kbd "<C-S-enter>") 'TeX-command-run-all)
 ;;     (add-hook 'LaTeX-mode-hook 'my-LaTeX-mode)
 ;;     ))
+
+(setq erc-server "irc.libera.chat"
+      erc-nick "vikblom"    ; Change this!
+      erc-user-full-name "Viktor B."  ; And this!
+      erc-track-shorten-start 8
+      erc-autojoin-channels-alist '(("irc.libera.chat" "#emacs"))
+      erc-kill-buffer-on-part t
+            erc-auto-query 'bury)
+
+;; (load-file "./private.el")
+
+(use-package circe
+  :ensure t
+  :config
+  (setq circe-network-options
+        '(("Libera Chat"
+           :tls t
+           :nick "vikblom"
+           :sasl-username "vikblom"
+           :sasl-password ,liberia-password
+           :channels ("#emacs-circe")
+           )))
+  )
