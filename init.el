@@ -116,6 +116,7 @@ M-x compile.
        (recompile)
        )
    (call-interactively 'compile)))
+
 ;; color compilation buffer
 (ignore-errors
   (require 'ansi-color)
@@ -123,6 +124,9 @@ M-x compile.
     (when (eq major-mode 'compilation-mode)
       (ansi-color-apply-on-region compilation-filter-start (point-max))))
   (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
+;; But mute color highlights.
+;;(add-hook 'compilation-mode-hook (lambda () (setq compilation-error-regexp-alist '(gnu))))
+
 
 (defun uuid-create ()
   "Return a newly generated UUID. This uses a simple hashing of variable data."
@@ -190,7 +194,8 @@ M-x compile.
 
 ;; BEHAVIOUR
 (progn (add-hook 'before-save-hook 'delete-trailing-whitespace)
-       (setq compilation-scroll-output t)
+       (setq compilation-scroll-output 'first-error)
+       (setq compilation-max-output-line-length 1024)
        (delete-selection-mode t)
        (setq x-select-enable-clipboard t)
        (setq x-select-enable-clipboard-manager nil)
@@ -304,6 +309,7 @@ M-x compile.
 ;;      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
 ;;      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
+;; https://github.com/alienvspredator/tree-sitter-go
 (if (treesit-available-p)
     (setq major-mode-remap-alist
           '((go-mode . go-ts-mode)
@@ -391,6 +397,14 @@ M-x compile.
 (use-package sql-indent
   :hook (sql-mode . sqlind-minor-mode))
 
+(use-package reformatter
+  :onlyif (executable-find "pg_format")
+  :config
+  (reformatter-define sql-pgformat-format
+    :program "pg_format"
+    :args '("-u1" "-U1" "-w135" "-"))
+  )
+
 ;; http://notesyoujustmightwanttosave.blogspot.com/2011/12/org-speed-keys.html
 (use-package org
   :config
@@ -403,6 +417,7 @@ M-x compile.
    org-startup-folded 'folded
    org-startup-indented 't
    org-log-done nil
+   org-edit-src-content-indentation 0
    ;; Babel
    org-confirm-babel-evaluate nil
    org-src-fontify-natively t
@@ -437,6 +452,7 @@ M-x compile.
   (evil-set-leader 'normal (kbd "<SPC>"))
   (evil-mode 1)
   (evil-set-undo-system 'undo-redo)
+  (setq evil-want-fine-undo t)
   ;; Emacs in terminal cannot tell <tab> from TAB (which is the same as C-i).
   (define-key evil-motion-state-map (kbd "TAB") nil)
   ;; Collides with xref-find-definition
@@ -452,6 +468,8 @@ M-x compile.
   :ensure t
   :config
   (evil-global-set-key 'normal (kbd "<leader> g g") 'magit-status)
+  (evil-global-set-key 'normal (kbd "<leader> r s") 'query-replace)
+  (evil-global-set-key 'normal (kbd "<leader> r r") 'query-replace-regexp)
   (add-hook 'after-save-hook 'magit-after-save-refresh-status)
   (setq vc-handled-backends nil
         magit-log-section-commit-count 20
@@ -645,7 +663,7 @@ M-x compile.
 
    ;;lsp-diagnostic-package :none
    ;;lsp-enable-on-type-formatting nil
-   lsp-log-io nil
+   ;; lsp-log-io t
    lsp-signature-render-documentation nil
    lsp-lens-enable nil
    lsp-headerline-breadcrumb-enable t
@@ -690,8 +708,20 @@ M-x compile.
   :ensure t
   :commands helm-lsp-workspace-symbol)
 
-;; (use-package rg
-;;   :ensure t)
+(use-package rg
+  :ensure t
+  :onlyif (executable-find "rg")
+
+  :bind (:map rg-mode-map
+              ("<normal-state> <return>" .
+               (lambda () (interactive)
+                 (progn (same-window-prefix)
+                        (compile-goto-error))))
+              ("<return>" .
+               (lambda () (interactive)
+                 (progn (same-window-prefix)
+                        (compile-goto-error))))
+              ))
 
 (use-package projectile
   ;; projectile + ripgrep
@@ -699,7 +729,6 @@ M-x compile.
   :ensure t
   :init
   (projectile-mode +1)
-  (setq projectile-switch-project-action #'projectile-commander)
   (setq projectile-globally-ignored-directories
         '(".idea"
           ".vscode"
@@ -837,13 +866,18 @@ M-x compile.
                                       ;;"-veryverbose"
                                       ;; "-rpc.trace"
                                       "-remote=auto"
-                                      ;; "-remote=unix;/var/folders/g5/x31g1yjj74b39_c1kbg4vwzw0000gp/T/gopls-daemon.viktor"
-                                      ;; "-remote=unix;/tmp/daemon.viktor"
-                                      ;;"-remote.debug=localhost:8008"
-                                      ;;"-remote.logfile=/tmp/gopls-viktor.log"
+                                      "-remote.debug=localhost:8008"
                                       ))
   :config
-  (setq go-ts-mode-indent-offset 4) ;; ???
+  (setq
+   go-ts-mode-indent-offset 4
+   lsp-go-use-gofumpt t
+   ;; compilation-error-regexp-alist '(gnu)
+   compilation-error-regexp-alist '(("^--- FAIL:.*" nil nil nil)
+                                    ("^ *\\([A-Za-z_./]+_test\\.go\\):\\([0-9]+\\)" 1 2 1)
+                                    )
+   )
+
   (defun golang-clean-buffer ()
     (interactive)
     (progn
@@ -851,25 +885,36 @@ M-x compile.
       (lsp-organize-imports)
       (lsp-format-buffer)
       (save-buffer)))
-  (add-hook 'go-ts-mode-hook
-            (lambda ()
-              (setq-local compile-command "go test")
-              ;;(setq-local compilation-read-command nil)
-              ;; Copy the fill paragraph n friends setup from go-mode.
-              (setq-local paragraph-start
-                          (concat "[[:space:]]*\\(?:"
-                                  comment-start-skip
-                                  "\\|\\*/?[[:space:]]*\\|\\)$"))
-              (setq-local paragraph-separate paragraph-start)
-              (setq-local fill-paragraph-function #'go-fill-paragraph)
-              (setq-local fill-forward-paragraph-function #'go--fill-forward-paragraph)
-              (setq-local adaptive-fill-function #'go--find-fill-prefix)
-              (setq-local adaptive-fill-first-line-regexp "")
-              (setq-local comment-line-break-function #'go--comment-indent-new-line)
-              ))
+
+
+  :hook ((go-ts-mode
+          .
+          (lambda ()
+            (setq-local compile-command "go test")
+            ;;(setq-local compilation-read-command nil)
+            ;; Copy the fill paragraph n friends setup from go-mode.
+            (setq-local paragraph-start
+                        (concat "[[:space:]]*\\(?:"
+                                comment-start-skip
+                                "\\|\\*/?[[:space:]]*\\|\\)$"))
+            (setq-local paragraph-separate paragraph-start)
+            (setq-local fill-paragraph-function #'go-fill-paragraph)
+            (setq-local fill-forward-paragraph-function #'go--fill-forward-paragraph)
+            (setq-local adaptive-fill-function #'go--find-fill-prefix)
+            (setq-local adaptive-fill-first-line-regexp "")
+            (setq-local comment-line-break-function #'go--comment-indent-new-line)
+
+            (add-hook 'before-save-hook #'lsp-format-buffer t t)
+            (add-hook 'before-save-hook #'lsp-organize-imports t t))
+          ))
+
   :bind (:map go-ts-mode-map
               ("<leader> l l" . golang-clean-buffer)
               ("<leader> l c" . compile)
+
+              ("<leader> l t" . (lambda () (interactive)
+                                  (compile (format "gotest -count=1 -run=%s -v" (treesit-defun-name (treesit-defun-at-point))))
+                                  ))
               ;; ("C-c k" . compile-again)
               ;; ("<M-down>" . (lambda () (interactive) (beginning-of-defun -1)))
               ;; ("<M-up>" . beginning-of-defun)
@@ -932,6 +977,18 @@ M-x compile.
               ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
               ("M-p" . beginning-of-defun)))
 
+;; Ghostel
+(use-package ghostel
+  :ensure t)
+
+;; (use-package ghostel-compile
+;;   :hook (after-init . ghostel-compile-global-mode))
+
+(use-package evil-ghostel
+  :ensure t
+  :after (ghostel evil)
+  :hook (ghostel-mode . evil-ghostel-mode))
+
 ;; Julia-lang
 ;; (use-package julia-mode
 ;;   :onlyif (executable-find "julia")
@@ -952,31 +1009,26 @@ M-x compile.
 
 ;; Python-lang
 (defun python-hook ()
+  :config
   (setq python-shell-interpreter "python3"
         python-indent 4)
   ;;(setq python-shell-interpreter-args "-c \"%load_ext autoreload\" --simple-prompt -")
   (setq python-shell-interpreter-args "-i")
-  (defun refresh ()
-    (interactive)
-    (save-some-buffers)
-    (python-shell-send-string "%autoreload"))
-  (add-hook 'inferior-python-mode-hook
-            (lambda () (local-set-key (kbd "<f5>") 'refresh)))
-  (local-set-key (kbd "<C-return>") 'python-shell-send-region)
-  (local-set-key (kbd "<C-enter>") 'python-shell-send-region)
-  (local-set-key (kbd "<f5>") 'refresh)
-  ;; (local-set-key (kbd "<M-up>")
-  ;;                (lambda () (interactive)
-  ;;                  (python-nav-backward-defun)
-  ;;                  (recenter 10)))
-  ;; (local-set-key (kbd "<M-down>")
-  ;;                (lambda () (interactive)
-  ;;                  (python-nav-forward-defun)
-  ;;                  (recenter 10)))
-  (setq-default py-split-windows-on-execute-function 'split-window-vertically)
-  (define-key python-mode-map (kbd "C-c C-p") nil))
+  ;; (defun refresh ()
+  ;;   (interactive)
+  ;;   (save-some-buffers)
+  ;;   (python-shell-send-string "%autoreload"))
+  ;; (add-hook 'inferior-python-mode-hook
+  ;;           (lambda () (local-set-key (kbd "<f5>") 'refresh)))
+  ;; (add-hook 'python-mode-hook 'python-hook)
+  :bind (:map python-mode-map
+              ("M-n" . (lambda () (interactive) (beginning-of-defun -1)))
+              ("M-p" . beginning-of-defun))
 
-(add-hook 'python-mode-hook 'python-hook)
+  (setq-default py-split-windows-on-execute-function 'split-window-vertically)
+  ;; (define-key python-mode-map (kbd "C-c C-p") nil)
+  )
+
 
 
 
