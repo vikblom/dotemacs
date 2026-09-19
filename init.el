@@ -299,7 +299,7 @@ M-x compile.
 ;; Installing grammars:
 ;; (setq treesit-language-source-alist
 ;;    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-;;      (go "https://github.com/tree-sitter/tree-sitter-go")
+;;      (go "https://github.com/alienvspredator/tree-sitter-go")
 ;;      (json "https://github.com/tree-sitter/tree-sitter-json")
 ;;      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
 ;;      (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
@@ -781,8 +781,8 @@ M-x compile.
   :config
   (setq markdown-fontify-code-blocks-natively nil))
 
-;; Today mode
-(load "~/.emacs.d/today-mode.el")
+;; Dagens mode
+(load "~/.emacs.d/dagens-mode.el")
 
 ;; Nix-lang
 (use-package nix-mode

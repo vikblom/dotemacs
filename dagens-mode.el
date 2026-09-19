@@ -1,15 +1,13 @@
 ;;; -*- lexical-binding: t; -*-
 
-(defun today-file ()
+(defun dagens-file ()
   (concat
-   user-emacs-directory
-   (file-name-as-directory "today")
-   ;;(file-name-as-directory "~/.today")
+   (file-name-as-directory "~/sync/dagens")
    (format-time-string "%Y-%m-%d")
    ".txt"))
 
 (defun center-text ()
-  (if (eq major-mode 'today-mode)
+  (if (eq major-mode 'dagens-mode)
       (progn
         (setq-local left-fringe-width
                     (max 0
@@ -23,19 +21,19 @@
         (set-window-buffer (get-buffer-window) (current-buffer))
         )))
 
-(defun today ()
+(defun dagens ()
   (interactive)
-  (find-file (today-file))
+  (find-file (dagens-file))
   (delete-other-windows)
-  (today-mode)
+  (dagens-mode)
   (add-hook 'window-state-change-hook 'center-text)
   )
 
 (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer)
 
 
-(define-derived-mode today-mode text-mode "today"
-  "Major mode for writing about today."
+(define-derived-mode dagens-mode text-mode "dagens"
+  "Major mode for writing about dagens."
   (load-fresh-theme 'doom-plain)
   (auto-fill-mode 1)
   (set-face-background 'fringe (face-background 'default))
@@ -43,4 +41,4 @@
   (set-window-buffer (get-buffer-window) (current-buffer)))
 
 
-(provide 'today-mode)
+(provide 'dagens-mode)
