@@ -214,10 +214,46 @@ M-x compile.
        gc-cons-threshold 100000000 ;; 100 mb
        )
 
-(setq display-buffer-base-action
-      '((display-buffer-reuse-window
-         display-buffer-same-window)
-        . ((reusable-frames . t))))
+;; Compile in rightmost window.
+(defun vbl/rightmost-window (&optional frame)
+  "Return the bottom-right window of FRAME, excluding side windows."
+  (let (best)
+    (dolist (window (window-at-side-list frame 'right) best)
+      (unless (window-parameter window 'window-side)
+        (when (or (null best)
+                  (> (window-pixel-top window) (window-pixel-top best)))
+          (setq best window))))))
+
+(defun vbl/display-buffer-rightmost (buffer alist)
+  "Display BUFFER in the bottom-most window at the frame's right edge.
+   Split that window when `split-window-sensibly' would consider it wide
+   enough, so a single-window frame still grows a second column; otherwise
+   reuse it.  A window created this way is sized by the `window-width' entry
+   of ALIST. "
+  (let ((window (vbl/rightmost-window)))
+    (when (window-live-p window)
+      (or (and (window-splittable-p window t)
+               (let ((new (split-window-no-error window nil 'right)))
+                 (and (window-live-p new)
+                      (window--display-buffer buffer new 'window alist))))
+          (and (not (window-dedicated-p window))
+               (window--display-buffer buffer window 'reuse alist))))))
+
+(add-to-list 'display-buffer-alist
+             '((major-mode . compilation-mode)
+               (display-buffer-reuse-window
+                vbl/display-buffer-rightmost)
+               (window-height . nil)
+               (window-width . vbl/even-window-width)
+               (reusable-frames . t)))
+
+(add-to-list 'display-buffer-alist
+             '((major-mode . help-mode)
+               (display-buffer-same-window)))
+
+(add-to-list 'display-buffer-alist
+             '((major-mode . xref--xref-buffer-mode)
+               (display-buffer-same-window)))
 
 ;; Avoid resizing.
 (customize-set-variable 'even-window-sizes nil)
@@ -603,6 +639,9 @@ M-x compile.
         helm-split-window-inside-p t
         helm-semantic-fuzzy-match t
         helm-imenu-fuzzy-match t)
+  (add-to-list 'display-buffer-alist
+               '((major-mode . helm-major-mode)
+                 (display-buffer-same-window)))
   ;; https://github.com/emacs-helm/helm/issues/648
   (setq ffap-machine-p-known 'reject)
   (defun helm-skip-dots (old-func &rest args)
@@ -711,7 +750,10 @@ M-x compile.
 (use-package rg
   :ensure t
   :onlyif (executable-find "rg")
-
+  :config
+  (add-to-list 'display-buffer-alist
+               '((major-mode . rg-mode)
+                 (display-buffer-same-window)))
   :bind (:map rg-mode-map
               ("<normal-state> <return>" .
                (lambda () (interactive)
